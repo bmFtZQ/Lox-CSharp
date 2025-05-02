@@ -45,6 +45,13 @@ internal static class Program
 
     internal static void Run(string source)
     {
+        var scanner = new Scanner(source);
+        var tokens = scanner.ScanTokens();
+
+        foreach (var token in tokens)
+        {
+            Console.WriteLine(token);
+        }
     }
 
     internal static void Error(int line, string message)
