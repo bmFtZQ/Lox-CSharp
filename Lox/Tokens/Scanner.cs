@@ -1,4 +1,4 @@
-namespace Lox;
+namespace Lox.Tokens;
 
 /// <summary>
 /// Class to tokenize Lox source code.

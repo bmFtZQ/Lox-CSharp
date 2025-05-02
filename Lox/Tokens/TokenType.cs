@@ -1,4 +1,4 @@
-namespace Lox;
+namespace Lox.Tokens;
 
 public enum TokenType
 {
