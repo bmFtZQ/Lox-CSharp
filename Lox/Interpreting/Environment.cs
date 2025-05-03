@@ -33,4 +33,15 @@ public class Environment
 
         throw new RunTimeException(name, $"Undefined variable '{name.Lexeme}'.");
     }
+
+    public void Assign(Token name, object? value)
+    {
+        if (_values.ContainsKey(name.Lexeme))
+        {
+            _values[name.Lexeme] = value;
+            return;
+        }
+
+        throw new RunTimeException(name, $"Undefined variable '{name.Lexeme}'.");
+    }
 }

@@ -7,20 +7,23 @@ public class AstPrinter : IExprVisitor<string>
         return expr.Accept(this);
     }
 
-    public string VisitBinary(BinaryExpr expr)
+    public string VisitBinaryExpr(BinaryExpr expr)
         => Parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right);
 
-    public string VisitGrouping(GroupingExpr expr)
+    public string VisitGroupingExpr(GroupingExpr expr)
         => Parenthesize("group", expr.Expression);
 
-    public string VisitLiteral(LiteralExpr expr)
+    public string VisitLiteralExpr(LiteralExpr expr)
         => expr.Value?.ToString() ?? "nil";
 
-    public string VisitUnary(UnaryExpr expr)
+    public string VisitUnaryExpr(UnaryExpr expr)
         => Parenthesize(expr.Operator.Lexeme, expr.Right);
 
-    public string VisitVariable(VariableExpr expr)
+    public string VisitVariableExpr(VariableExpr expr)
         => $"(variable {expr.Name.Lexeme})";
+
+    public string VisitAssignExpr(AssignExpr expr)
+        => Parenthesize($"assign {expr.Name.Lexeme}", expr.Value);
 
     internal string Parenthesize(string name, params IEnumerable<Expr> expressions)
         => $"({name} {string.Join(' ', expressions.Select(expr => expr.Accept(this)))})";

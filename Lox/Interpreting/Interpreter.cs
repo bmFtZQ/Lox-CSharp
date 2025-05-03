@@ -39,7 +39,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// <exception cref="RunTimeException">
     /// Thrown if operand types are incorrect for the specified operator.
     /// </exception>
-    public object? VisitBinary(BinaryExpr expr)
+    public object? VisitBinaryExpr(BinaryExpr expr)
     {
         var left = Evaluate(expr.Left);
         var right = Evaluate(expr.Right);
@@ -106,7 +106,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// </summary>
     /// <param name="expr">The grouping expression to evaluate.</param>
     /// <returns>The value computed from the expression.</returns>
-    public object? VisitGrouping(GroupingExpr expr)
+    public object? VisitGroupingExpr(GroupingExpr expr)
     {
         return Evaluate(expr.Expression);
     }
@@ -116,7 +116,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// </summary>
     /// <param name="expr">The literal expression to evaluate.</param>
     /// <returns>The literal value from the expression.</returns>
-    public object? VisitLiteral(LiteralExpr expr)
+    public object? VisitLiteralExpr(LiteralExpr expr)
     {
         return expr.Value;
     }
@@ -126,7 +126,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// </summary>
     /// <param name="expr">The unary expression to evaluate.</param>
     /// <returns>The value computed from the expression.</returns>
-    public object? VisitUnary(UnaryExpr expr)
+    public object? VisitUnaryExpr(UnaryExpr expr)
     {
         var right = Evaluate(expr.Right);
 
@@ -149,7 +149,19 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// </summary>
     /// <param name="expr">The variable expression to evaluate.</param>
     /// <returns>The value from the variable.</returns>
-    public object? VisitVariable(VariableExpr expr) => _environment.Get(expr.Name);
+    public object? VisitVariableExpr(VariableExpr expr) => _environment.Get(expr.Name);
+
+    /// <summary>
+    /// Evaluate an assignment expression.
+    /// </summary>
+    /// <param name="expr">The assignment expression to evaluate.</param>
+    /// <returns>The value that was assigned.</returns>
+    public object? VisitAssignExpr(AssignExpr expr)
+    {
+        var value = Evaluate(expr.Value);
+        _environment.Assign(expr.Name, value);
+        return value;
+    }
 
     /// <summary>
     /// Evaluate an expression.

@@ -104,7 +104,36 @@ public class Parser(IEnumerable<Token> tokens)
     /// Scan for expression, lowest precedence.
     /// </summary>
     /// <returns>An AST populated with the parsed expressions.</returns>
-    private Expr Expression() => Equality();
+    private Expr Expression() => Assignment();
+
+    /// <summary>
+    /// Scan for assignment expression.
+    /// </summary>
+    /// <returns>An AST populated with the parsed expression.</returns>
+    private Expr Assignment()
+    {
+        var expr = Equality();
+
+        if (Match(TokenType.Equal))
+        {
+            // Search for 'l-value' that can be assigned to.
+            var equals = Previous();
+
+            // Search for additional assignment expressions or navigate further
+            // down the grammar.
+            var value = Assignment();
+
+            if (expr is VariableExpr varExpr)
+            {
+                var name = varExpr.Name;
+                return new AssignExpr(name, value);
+            }
+
+            Error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
+    }
 
     /// <summary>
     /// Scan for equality expression, navigating further down hierarchy if no
