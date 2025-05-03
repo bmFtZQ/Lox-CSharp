@@ -10,7 +10,7 @@ public class RunTimeException(Token token, string message) : Exception(message)
 
 public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 {
-    private readonly Environment _environment = new();
+    private Environment _environment = new();
 
     /// <summary>
     /// Interpret a list of statements.
@@ -173,9 +173,36 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
         return expr.Accept(this);
     }
 
+    /// <summary>
+    /// Execute a statement.
+    /// </summary>
+    /// <param name="statement">The statement to execute.</param>
     private void Execute(Stmt? statement)
     {
         statement?.Accept(this);
+    }
+
+    /// <summary>
+    /// Execute a series of statements, using the specified environment.
+    /// </summary>
+    /// <param name="statements">The statements to execute.</param>
+    /// <param name="env">The environment to use.</param>
+    private void ExecuteBlock(IEnumerable<Stmt?> statements, Environment env)
+    {
+        var previous = _environment;
+
+        try
+        {
+            _environment = env;
+            foreach (var statement in statements)
+            {
+                Execute(statement);
+            }
+        }
+        finally
+        {
+            _environment = previous;
+        }
     }
 
     /// <summary>
@@ -223,7 +250,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// Execute an expression statement, evaluating the expression and
     /// discarding value.
     /// </summary>
-    /// <param name="stmt">The statement to evaluate.</param>
+    /// <param name="stmt">The statement to execute.</param>
     public void VisitExpressionStmt(ExpressionStmt stmt)
     {
         Evaluate(stmt.Expression);
@@ -233,7 +260,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// Execute a print statement, evaluating the expression and printing output
     /// to console.
     /// </summary>
-    /// <param name="stmt">The statement to evaluate.</param>
+    /// <param name="stmt">The statement to execute.</param>
     public void VisitPrintStmt(PrintStmt stmt)
     {
         var value = Evaluate(stmt.Expression);
@@ -244,7 +271,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// Execute a variable declaration statement, evaluating the optional
     /// initializer expression.
     /// </summary>
-    /// <param name="stmt">The statement to evaluate.</param>
+    /// <param name="stmt">The statement to execute.</param>
     public void VisitVarStmt(VarStmt stmt)
     {
         var value = stmt.Initializer is not null
@@ -252,5 +279,14 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
             : null;
 
         _environment.Define(stmt.Name.Lexeme, value);
+    }
+
+    /// <summary>
+    /// Execute a block statement, executing each of the inner statements.
+    /// </summary>
+    /// <param name="stmt">The statement to execute.</param>
+    public void VisitBlockStmt(BlockStmt stmt)
+    {
+        ExecuteBlock(stmt.Statements, new Environment(_environment));
     }
 }

@@ -2,7 +2,7 @@ using Lox.Tokens;
 
 namespace Lox.Interpreting;
 
-public class Environment
+public class Environment(Environment? enclosing = null)
 {
     private readonly Dictionary<string, object?> _values = [];
 
@@ -31,6 +31,11 @@ public class Environment
             return value;
         }
 
+        if (enclosing is not null)
+        {
+            return enclosing.Get(name);
+        }
+
         throw new RunTimeException(name, $"Undefined variable '{name.Lexeme}'.");
     }
 
@@ -39,6 +44,12 @@ public class Environment
         if (_values.ContainsKey(name.Lexeme))
         {
             _values[name.Lexeme] = value;
+            return;
+        }
+
+        if (enclosing is not null)
+        {
+            enclosing.Assign(name, value);
             return;
         }
 

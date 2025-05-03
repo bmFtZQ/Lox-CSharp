@@ -14,7 +14,7 @@ public class Parser(IEnumerable<Token> tokens)
     /// statements.
     /// </summary>
     /// <returns>An AST populated with the list of statements.</returns>
-    public IEnumerable<Stmt?> Parse()
+    public List<Stmt?> Parse()
     {
         List<Stmt?> statements = [];
 
@@ -75,6 +75,11 @@ public class Parser(IEnumerable<Token> tokens)
             return PrintStatement();
         }
 
+        if (Match(TokenType.LeftBrace))
+        {
+            return new BlockStmt(Block());
+        }
+
         return ExpressionStatement();
     }
 
@@ -98,6 +103,19 @@ public class Parser(IEnumerable<Token> tokens)
         var value = Expression();
         Consume(TokenType.Semicolon, "Expect ';' after value.");
         return new ExpressionStmt(value);
+    }
+
+    private List<Stmt?> Block()
+    {
+        List<Stmt?> statements = [];
+
+        while (!Check(TokenType.RightBrace) && !IsAtEnd)
+        {
+            statements.Add(Declaration());
+        }
+
+        Consume(TokenType.RightBrace, "Expected '}' after block.");
+        return statements;
     }
 
     /// <summary>

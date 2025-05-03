@@ -7,6 +7,7 @@ public interface IStmtVisitor
     void VisitExpressionStmt(ExpressionStmt stmt);
     void VisitPrintStmt(PrintStmt stmt);
     void VisitVarStmt(VarStmt stmt);
+    void VisitBlockStmt(BlockStmt stmt);
 }
 
 public abstract record Stmt
@@ -27,4 +28,9 @@ public record PrintStmt(Expr Expression) : Stmt
 public record VarStmt(Token Name, Expr? Initializer) : Stmt
 {
     public override void Accept(IStmtVisitor visitor) => visitor.VisitVarStmt(this);
+}
+
+public record BlockStmt(IEnumerable<Stmt?> Statements) : Stmt
+{
+    public override void Accept(IStmtVisitor visitor) => visitor.VisitBlockStmt(this);
 }
