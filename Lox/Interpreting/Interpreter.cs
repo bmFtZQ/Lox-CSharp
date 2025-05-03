@@ -89,12 +89,10 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
                 return (double)left! <= (double)right!;
 
             case TokenType.EqualEqual:
-                CheckNumberOperand(expr.Operator, left, right);
-                return left == right;
+                return Equals(left, right);
 
             case TokenType.BangEqual:
-                CheckNumberOperand(expr.Operator, left, right);
-                return left != right;
+                return !Equals(left, right);
 
             default:
                 return null;
@@ -164,13 +162,34 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     }
 
     /// <summary>
+    /// Evaluate a logical expression, short-circuiting the evaluation.
+    /// </summary>
+    /// <param name="expr">The logical expression to evaluate.</param>
+    /// <returns>The value computed from the expression.</returns>
+    public object? VisitLogicalExpr(LogicalExpr expr)
+    {
+        var left = Evaluate(expr.Left);
+
+        if (expr.Operator.Type == TokenType.Or)
+        {
+            if (IsTruthy(left)) return left;
+        }
+        else
+        {
+            if (!IsTruthy(left)) return left;
+        }
+
+        return Evaluate(expr.Right);
+    }
+
+    /// <summary>
     /// Evaluate an expression.
     /// </summary>
     /// <param name="expr">The expression to evaluate.</param>
     /// <returns>The value computed from the expression.</returns>
-    private object? Evaluate(Expr expr)
+    private object? Evaluate(Expr? expr)
     {
-        return expr.Accept(this);
+        return expr?.Accept(this);
     }
 
     /// <summary>
@@ -288,5 +307,33 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     public void VisitBlockStmt(BlockStmt stmt)
     {
         ExecuteBlock(stmt.Statements, new Environment(_environment));
+    }
+
+    /// <summary>
+    /// Execute an if statement.
+    /// </summary>
+    /// <param name="stmt">The if statement to execute.</param>
+    public void VisitIfStmt(IfStmt stmt)
+    {
+        if (IsTruthy(Evaluate(stmt.Condition)))
+        {
+            Execute(stmt.ThenBranch);
+        }
+        else if (stmt.ElseBranch is not null)
+        {
+            Execute(stmt.ElseBranch);
+        }
+    }
+
+    /// <summary>
+    /// Execute a while loop statement.
+    /// </summary>
+    /// <param name="stmt">The while statement to execute.</param>
+    public void VisitWhileStmt(WhileStmt stmt)
+    {
+        while (IsTruthy(Evaluate(stmt.Condition)))
+        {
+            Execute(stmt.Body);
+        }
     }
 }

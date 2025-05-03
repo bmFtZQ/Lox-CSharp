@@ -25,6 +25,9 @@ public class AstPrinter : IExprVisitor<string>
     public string VisitAssignExpr(AssignExpr expr)
         => Parenthesize($"assign {expr.Name.Lexeme}", expr.Value);
 
+    public string VisitLogicalExpr(LogicalExpr expr)
+        => Parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right);
+
     internal string Parenthesize(string name, params IEnumerable<Expr> expressions)
         => $"({name} {string.Join(' ', expressions.Select(expr => expr.Accept(this)))})";
 }

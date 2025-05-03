@@ -1,3 +1,4 @@
+using System.Reflection.Metadata.Ecma335;
 using Lox.Tokens;
 
 namespace Lox.Parsing;
@@ -70,14 +71,29 @@ public class Parser(IEnumerable<Token> tokens)
     /// <returns>An AST populate with the parsed statement.</returns>
     private Stmt Statement()
     {
-        if (Match(TokenType.Print))
+        if (Match(TokenType.If))
         {
-            return PrintStatement();
+            return IfStatement();
         }
 
         if (Match(TokenType.LeftBrace))
         {
             return new BlockStmt(Block());
+        }
+
+        if (Match(TokenType.While))
+        {
+            return WhileStatement();
+        }
+
+        if (Match(TokenType.For))
+        {
+            return ForStatement();
+        }
+
+        if (Match(TokenType.Print))
+        {
+            return PrintStatement();
         }
 
         return ExpressionStatement();
@@ -90,7 +106,7 @@ public class Parser(IEnumerable<Token> tokens)
     private PrintStmt PrintStatement()
     {
         var value = Expression();
-        Consume(TokenType.Semicolon, "Expect ';' after value.");
+        Consume(TokenType.Semicolon, "Expected ';' after value.");
         return new PrintStmt(value);
     }
 
@@ -101,10 +117,14 @@ public class Parser(IEnumerable<Token> tokens)
     private ExpressionStmt ExpressionStatement()
     {
         var value = Expression();
-        Consume(TokenType.Semicolon, "Expect ';' after value.");
+        Consume(TokenType.Semicolon, "Expected ';' after value.");
         return new ExpressionStmt(value);
     }
 
+    /// <summary>
+    /// Scan for block statement.
+    /// </summary>
+    /// <returns>An AST populated with the parsed inner statements.</returns>
     private List<Stmt?> Block()
     {
         List<Stmt?> statements = [];
@@ -119,6 +139,100 @@ public class Parser(IEnumerable<Token> tokens)
     }
 
     /// <summary>
+    /// Scan for if statement.
+    /// </summary>
+    /// <returns>An AST populate with the parsed if statement.</returns>
+    private IfStmt IfStatement()
+    {
+        Consume(TokenType.LeftParenthesis, "Expected '(' after 'if'.");
+        var condition = Expression();
+        Consume(TokenType.RightParenthesis, "Expected ')' after if condition.");
+
+        var thenBranch = Statement();
+
+        var elseBranch = Match(TokenType.Else)
+            ? Statement()
+            : null;
+
+        return new IfStmt(condition, thenBranch, elseBranch);
+    }
+
+    /// <summary>
+    /// Scan for while loop statement.
+    /// </summary>
+    /// <returns>An AST populated with the parsed while statement.</returns>
+    private WhileStmt WhileStatement()
+    {
+        Consume(TokenType.LeftParenthesis, "Expected '(' after 'if'.");
+        var condition = Expression();
+        Consume(TokenType.RightParenthesis, "Expected ')' after if condition.");
+
+        var body = Statement();
+
+        return new WhileStmt(condition, body);
+    }
+
+    /// <summary>
+    /// Scan for for-loop statement, then convert to while loop.
+    /// </summary>
+    /// <returns>
+    /// An AST populated with the parsed and converted for-loop.
+    /// </returns>
+    private Stmt ForStatement()
+    {
+        Consume(TokenType.LeftParenthesis, "Expected '(' after 'if'.");
+
+        Stmt? initializer;
+        if (Match(TokenType.Semicolon))
+        {
+            initializer = null;
+        }
+        else if (Match(TokenType.Var))
+        {
+            initializer = VarDeclaration();
+        }
+        else
+        {
+            initializer = ExpressionStatement();
+        }
+
+        var condition = !Check(TokenType.Semicolon)
+            ? Expression()
+            : new LiteralExpr(true);
+
+        Consume(TokenType.Semicolon, "Expected ';' after for condition.");
+
+        var increment = !Check(TokenType.RightParenthesis)
+            ? Expression()
+            : null;
+
+        Consume(TokenType.RightParenthesis, "Expected ')' after if condition.");
+
+        var body = Statement();
+
+        if (increment is not null)
+        {
+            var incrementStmt = new ExpressionStmt(increment);
+
+            // Append increment expression to existing block or create new block
+            // for a single statement body.
+            body = body is BlockStmt block
+                ? new BlockStmt(block.Statements.Append(incrementStmt))
+                : new BlockStmt([body, incrementStmt]);
+        }
+
+        // Create while-loop that can 
+        Stmt whileLoop = new WhileStmt(condition, body);
+
+        // Introduce new scope for initialized variable if present.
+        var loopStmt = initializer is not null
+            ? new BlockStmt([initializer, whileLoop])
+            : whileLoop;
+
+        return loopStmt;
+    }
+
+    /// <summary>
     /// Scan for expression, lowest precedence.
     /// </summary>
     /// <returns>An AST populated with the parsed expressions.</returns>
@@ -130,7 +244,7 @@ public class Parser(IEnumerable<Token> tokens)
     /// <returns>An AST populated with the parsed expression.</returns>
     private Expr Assignment()
     {
-        var expr = Equality();
+        var expr = Or();
 
         if (Match(TokenType.Equal))
         {
@@ -148,6 +262,42 @@ public class Parser(IEnumerable<Token> tokens)
             }
 
             Error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
+    }
+
+    /// <summary>
+    /// Scan for logical or expression.
+    /// </summary>
+    /// <returns>An AST populated with the parsed expression.</returns>
+    private Expr Or()
+    {
+        var expr = And();
+
+        while (Match(TokenType.Or))
+        {
+            var op = Previous();
+            var right = And();
+            expr = new LogicalExpr(op, expr, right);
+        }
+
+        return expr;
+    }
+
+    /// <summary>
+    /// Scan for logical and expression.
+    /// </summary>
+    /// <returns>An AST populated with the parsed expression.</returns>
+    private Expr And()
+    {
+        var expr = Equality();
+
+        while (Match(TokenType.And))
+        {
+            var op = Previous();
+            var right = And();
+            expr = new LogicalExpr(op, expr, right);
         }
 
         return expr;
@@ -263,7 +413,7 @@ public class Parser(IEnumerable<Token> tokens)
         if (Match(TokenType.LeftParenthesis))
         {
             var expr = Expression();
-            Consume(TokenType.RightParenthesis, "Expect ')' after expression.");
+            Consume(TokenType.RightParenthesis, "Expected ')' after expression.");
             return new GroupingExpr(expr);
         }
 

@@ -8,6 +8,8 @@ public interface IStmtVisitor
     void VisitPrintStmt(PrintStmt stmt);
     void VisitVarStmt(VarStmt stmt);
     void VisitBlockStmt(BlockStmt stmt);
+    void VisitIfStmt(IfStmt stmt);
+    void VisitWhileStmt(WhileStmt stmt);
 }
 
 public abstract record Stmt
@@ -33,4 +35,14 @@ public record VarStmt(Token Name, Expr? Initializer) : Stmt
 public record BlockStmt(IEnumerable<Stmt?> Statements) : Stmt
 {
     public override void Accept(IStmtVisitor visitor) => visitor.VisitBlockStmt(this);
+}
+
+public record IfStmt(Expr Condition, Stmt ThenBranch, Stmt? ElseBranch) : Stmt
+{
+    public override void Accept(IStmtVisitor visitor) => visitor.VisitIfStmt(this);
+}
+
+public record WhileStmt(Expr Condition, Stmt Body) : Stmt
+{
+    public override void Accept(IStmtVisitor visitor) => visitor.VisitWhileStmt(this);
 }

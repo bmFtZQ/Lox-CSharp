@@ -10,6 +10,7 @@ public interface IExprVisitor<out T>
     T VisitUnaryExpr(UnaryExpr expr);
     T VisitVariableExpr(VariableExpr expr);
     T VisitAssignExpr(AssignExpr expr);
+    T VisitLogicalExpr(LogicalExpr expr);
 }
 
 public abstract record Expr
@@ -45,4 +46,9 @@ public record VariableExpr(Token Name) : Expr
 public record AssignExpr(Token Name, Expr Value) : Expr
 {
     public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitAssignExpr(this);
+}
+
+public record LogicalExpr(Token Operator, Expr Left, Expr Right) : Expr
+{
+    public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitLogicalExpr(this);
 }

@@ -75,8 +75,8 @@ public class Scanner(string source)
             // Ambiguous dual-char tokens.
             case '!': AddToken(MatchNext('=') ? TokenType.BangEqual : TokenType.Bang); break;
             case '=': AddToken(MatchNext('=') ? TokenType.EqualEqual : TokenType.Equal); break;
-            case '<': AddToken(MatchNext('=') ? TokenType.GreaterEqual : TokenType.Greater); break;
-            case '>': AddToken(MatchNext('=') ? TokenType.LessEqual : TokenType.Less); break;
+            case '<': AddToken(MatchNext('=') ? TokenType.LessEqual : TokenType.Less); break;
+            case '>': AddToken(MatchNext('=') ? TokenType.GreaterEqual : TokenType.Greater); break;
 
             // Comment or division.
             case '/':
