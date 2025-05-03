@@ -1,16 +1,33 @@
+using Lox.Interpreting.NativeCallables;
 using Lox.Parsing;
 using Lox.Tokens;
 
 namespace Lox.Interpreting;
 
-public class RunTimeException(Token token, string message) : Exception(message)
+public class RunTimeException(Token? token = null, string? message = null) : Exception(message)
 {
-    public Token Token { get; } = token;
+    public Token? Token { get; } = token;
+}
+
+/// <summary>
+/// Exception that holds a value, used to unwind stack from function call.
+/// </summary>
+/// <param name="value">The value to return.</param>
+public class ReturnException(object? value = null) : RunTimeException
+{
+    public object? Value { get; } = value;
 }
 
 public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 {
-    private Environment _environment = new();
+    private Environment _environment;
+    public Environment Globals { get; } = new();
+
+    public Interpreter()
+    {
+        Globals.Define("clock", ClockCallable.Instance);
+        _environment = Globals;
+    }
 
     /// <summary>
     /// Interpret a list of statements.
@@ -183,6 +200,31 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     }
 
     /// <summary>
+    /// Evaluate a call expression, executing the callable and returning value.
+    /// </summary>
+    /// <param name="expr">The call expression to evaluate.</param>
+    /// <returns>The value computed from the function call.</returns>
+    /// <exception cref="RunTimeException">Thrown if the number of arguments
+    /// does not match the callee's number of parameters.</exception>
+    public object? VisitCallExpr(CallExpr expr)
+    {
+        var callee = Evaluate(expr.Callee);
+
+        var arguments = expr.Arguments.Select(Evaluate).ToArray();
+
+        var function = callee as ILoxCallable ?? throw new RunTimeException(
+            expr.Parenthesis, "Can only call functions and classes.");
+
+        if (arguments.Length != function.Arity)
+        {
+            throw new RunTimeException(expr.Parenthesis,
+                $"Expected {function.Arity} arguments but got {arguments.Length}.");
+        }
+
+        return function.Call(this, arguments);
+    }
+
+    /// <summary>
     /// Evaluate an expression.
     /// </summary>
     /// <param name="expr">The expression to evaluate.</param>
@@ -206,7 +248,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// </summary>
     /// <param name="statements">The statements to execute.</param>
     /// <param name="env">The environment to use.</param>
-    private void ExecuteBlock(IEnumerable<Stmt?> statements, Environment env)
+    public void ExecuteBlock(IEnumerable<Stmt?> statements, Environment env)
     {
         var previous = _environment;
 
@@ -287,6 +329,21 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     }
 
     /// <summary>
+    /// Execute a return statement, evaluating the expression and returning.
+    /// </summary>
+    /// <param name="stmt">The statement to execute.</param>
+    /// <exception cref="ReturnException">Thrown to return the value, must be
+    /// caught by the called function.</exception>
+    public void VisitReturnStmt(ReturnStmt stmt)
+    {
+        var value = stmt.Value is not null
+            ? Evaluate(stmt.Value)
+            : null;
+
+        throw new ReturnException(value);
+    }
+
+    /// <summary>
     /// Execute a variable declaration statement, evaluating the optional
     /// initializer expression.
     /// </summary>
@@ -298,6 +355,16 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
             : null;
 
         _environment.Define(stmt.Name.Lexeme, value);
+    }
+
+    /// <summary>
+    /// Execute a function declaration statement.
+    /// </summary>
+    /// <param name="stmt">The statement to execute.</param>
+    public void VisitFunctionStmt(FunctionStmt stmt)
+    {
+        var function = new LoxFunction(stmt);
+        _environment.Define(stmt.Name.Lexeme, function);
     }
 
     /// <summary>

@@ -39,6 +39,13 @@ public class Environment(Environment? enclosing = null)
         throw new RunTimeException(name, $"Undefined variable '{name.Lexeme}'.");
     }
 
+    /// <summary>
+    /// Assign a value that already exists within the environment.
+    /// </summary>
+    /// <param name="name">The name of the variable to assign.</param>
+    /// <param name="value">The value to assign.</param>
+    /// <exception cref="RunTimeException">Thrown if variable does not already
+    /// exist within environment.</exception>
     public void Assign(Token name, object? value)
     {
         if (_values.ContainsKey(name.Lexeme))

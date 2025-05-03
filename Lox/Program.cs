@@ -72,8 +72,7 @@ internal static class Program
 
     internal static void RunTimeError(RunTimeException exception)
     {
-        Console.Error.WriteLine(exception.Message);
-        Console.Error.WriteLine($"[line {exception.Token.Line}]");
+        Console.Error.WriteLine($"[line {exception.Token?.Line}] {exception.Message}");
         HadRuntimeError = true;
     }
 

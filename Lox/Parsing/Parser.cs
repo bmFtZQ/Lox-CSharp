@@ -1,4 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
 using Lox.Tokens;
 
 namespace Lox.Parsing;
@@ -38,9 +37,9 @@ public class Parser(IEnumerable<Token> tokens)
     {
         try
         {
-            return Match(TokenType.Var)
-                ? VarDeclaration()
-                : Statement();
+            if (Match(TokenType.Var)) return VarDeclaration();
+            if (Match(TokenType.Fun)) return Function();
+            return Statement();
         }
         catch (ParseException)
         {
@@ -63,6 +62,38 @@ public class Parser(IEnumerable<Token> tokens)
 
         Consume(TokenType.Semicolon, "Expected ';' after variable declaration.");
         return new VarStmt(name, initializer);
+    }
+
+    /// <summary>
+    /// Scan for function or method declaration.
+    /// </summary>
+    /// <param name="kind">Used for changing the displayed errors.</param>
+    /// <returns>An AST with the parsed function declaration.</returns>
+    private FunctionStmt Function(string kind = "function")
+    {
+        var name = Consume(TokenType.Identifier, "Expected {kind} name.");
+
+        Consume(TokenType.LeftParenthesis, $"Expect '(' after {kind} name.");
+
+        List<Token> parameters = [];
+        if (!Check(TokenType.RightParenthesis))
+        {
+            do
+            {
+                if (parameters.Count >= 255)
+                {
+                    Error(Peek(), "Can't have more than 255 parameters");
+                }
+
+                parameters.Add(
+                    Consume(TokenType.Identifier, "Expected parameter name."));
+            } while (Match(TokenType.Comma));
+        }
+
+        Consume(TokenType.RightParenthesis, $"Expected ')' after {kind} parameters.");
+        Consume(TokenType.LeftBrace, $"Expected '{{' before {kind} body.");
+        var body = Block();
+        return new FunctionStmt(name, parameters, body);
     }
 
     /// <summary>
@@ -91,6 +122,11 @@ public class Parser(IEnumerable<Token> tokens)
             return ForStatement();
         }
 
+        if (Match(TokenType.Return))
+        {
+            return ReturnStatement();
+        }
+
         if (Match(TokenType.Print))
         {
             return PrintStatement();
@@ -108,6 +144,22 @@ public class Parser(IEnumerable<Token> tokens)
         var value = Expression();
         Consume(TokenType.Semicolon, "Expected ';' after value.");
         return new PrintStmt(value);
+    }
+
+    /// <summary>
+    /// Scan for return statement.
+    /// </summary>
+    /// <returns>An AST populated with the parsed statement.</returns>
+    private ReturnStmt ReturnStatement()
+    {
+        var keyword = Previous();
+
+        var value = !Check(TokenType.Semicolon)
+            ? Expression()
+            : null;
+
+        Consume(TokenType.Semicolon, "Expected ';' after return value.");
+        return new ReturnStmt(keyword, value);
     }
 
     /// <summary>
@@ -217,7 +269,7 @@ public class Parser(IEnumerable<Token> tokens)
             // Append increment expression to existing block or create new block
             // for a single statement body.
             body = body is BlockStmt block
-                ? new BlockStmt(block.Statements.Append(incrementStmt))
+                ? new BlockStmt([..block.Statements, incrementStmt])
                 : new BlockStmt([body, incrementStmt]);
         }
 
@@ -391,7 +443,31 @@ public class Parser(IEnumerable<Token> tokens)
             return new UnaryExpr(op, right);
         }
 
-        return Primary();
+        return Call();
+    }
+
+    /// <summary>
+    /// Scan for call expression,navigating further down hierarchy if no call
+    /// expression found.
+    /// </summary>
+    /// <returns>An AST populated with the parsed expressions.</returns>
+    private Expr Call()
+    {
+        var expr = Primary();
+
+        while (true)
+        {
+            if (Match(TokenType.LeftParenthesis))
+            {
+                expr = FinishCall(expr);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return expr;
     }
 
     /// <summary>
@@ -423,6 +499,32 @@ public class Parser(IEnumerable<Token> tokens)
         }
 
         throw Error(Peek(), "Expected an expression.");
+    }
+
+    /// <summary>
+    /// Parse a call expression argument list and construct CallExpr.
+    /// </summary>
+    /// <param name="callee">The expression that evaluates the callee.</param>
+    /// <returns>An AST populated with the completed call expression.</returns>
+    private CallExpr FinishCall(Expr callee)
+    {
+        List<Expr> arguments = [];
+        if (!Check(TokenType.RightParenthesis))
+        {
+            do
+            {
+                if (arguments.Count >= 255)
+                {
+                    Error(Peek(), "Can't have more than 255 arguments.");
+                }
+
+                arguments.Add(Expression());
+            } while (Match(TokenType.Comma));
+        }
+
+        var paren = Consume(TokenType.RightParenthesis, "Expected ')' after arguments.");
+
+        return new CallExpr(callee, paren, arguments);
     }
 
     /// <summary>
