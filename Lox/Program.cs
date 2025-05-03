@@ -1,4 +1,5 @@
-﻿using Lox.Parsing;
+﻿using Lox.Interpreting;
+using Lox.Parsing;
 using Lox.Tokens;
 
 namespace Lox;
@@ -6,6 +7,7 @@ namespace Lox;
 internal static class Program
 {
     internal static bool HadError = false;
+    internal static bool HadRuntimeError = false;
 
     internal static void Main(string[] args)
     {
@@ -32,6 +34,7 @@ internal static class Program
         Run(source);
 
         if (HadError) Environment.Exit(65);
+        if (HadRuntimeError) Environment.Exit(70);
     }
 
     internal static void RunPrompt()
@@ -54,8 +57,11 @@ internal static class Program
         var parser = new Parser(tokens);
         var expression = parser.Parse();
 
-        if (HadError) return;
-        Console.WriteLine(new AstPrinter().Print(expression!));
+        var interpreter = new Interpreter();
+
+        if (HadError || expression is null) return;
+
+        interpreter.Interpret(expression);
     }
 
     internal static void Error(int line, string message) =>
@@ -63,6 +69,13 @@ internal static class Program
 
     internal static void Error(Token token, string message) =>
         Report(token.Line, token.Type != TokenType.Eof ? " at end" : $" at '{token.Lexeme}'", message);
+
+    internal static void RunTimeError(RunTimeException exception)
+    {
+        Console.Error.WriteLine(exception.Message);
+        Console.Error.WriteLine($"[line {exception.Token.Line}]");
+        HadRuntimeError = true;
+    }
 
     internal static void Report(int line, string where, string message)
     {

@@ -98,6 +98,15 @@ public class Scanner(string source)
                 _line++;
                 break;
 
+            // Unix shebangs
+            case '#':
+                if (MatchNext('!'))
+                {
+                    while (Peek() != '\n' && !IsAtEnd) Advance();
+                }
+
+                break;
+
             default:
                 if (char.IsWhiteSpace(c))
                 {
