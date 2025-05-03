@@ -10,11 +10,13 @@ public class RunTimeException(Token token, string message) : Exception(message)
 
 public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 {
+    private readonly Environment _environment = new();
+
     /// <summary>
     /// Interpret a list of statements.
     /// </summary>
     /// <param name="statements">The statements to interpret.</param>
-    public void Interpret(IEnumerable<Stmt> statements)
+    public void Interpret(IEnumerable<Stmt?> statements)
     {
         try
         {
@@ -143,6 +145,13 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     }
 
     /// <summary>
+    /// Evaluate a variable expression.
+    /// </summary>
+    /// <param name="expr">The variable expression to evaluate.</param>
+    /// <returns>The value from the variable.</returns>
+    public object? VisitVariable(VariableExpr expr) => _environment.Get(expr.Name);
+
+    /// <summary>
     /// Evaluate an expression.
     /// </summary>
     /// <param name="expr">The expression to evaluate.</param>
@@ -152,9 +161,9 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
         return expr.Accept(this);
     }
 
-    private void Execute(Stmt statement)
+    private void Execute(Stmt? statement)
     {
-        statement.Accept(this);
+        statement?.Accept(this);
     }
 
     /// <summary>
@@ -198,14 +207,38 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
         _ => null
     } ?? "nil";
 
+    /// <summary>
+    /// Execute an expression statement, evaluating the expression and
+    /// discarding value.
+    /// </summary>
+    /// <param name="stmt">The statement to evaluate.</param>
     public void VisitExpressionStmt(ExpressionStmt stmt)
     {
         Evaluate(stmt.Expression);
     }
 
+    /// <summary>
+    /// Execute a print statement, evaluating the expression and printing output
+    /// to console.
+    /// </summary>
+    /// <param name="stmt">The statement to evaluate.</param>
     public void VisitPrintStmt(PrintStmt stmt)
     {
         var value = Evaluate(stmt.Expression);
         Console.WriteLine(Stringify(value));
+    }
+
+    /// <summary>
+    /// Execute a variable declaration statement, evaluating the optional
+    /// initializer expression.
+    /// </summary>
+    /// <param name="stmt">The statement to evaluate.</param>
+    public void VisitVarStmt(VarStmt stmt)
+    {
+        var value = stmt.Initializer is not null
+            ? Evaluate(stmt.Initializer)
+            : null;
+
+        _environment.Define(stmt.Name.Lexeme, value);
     }
 }

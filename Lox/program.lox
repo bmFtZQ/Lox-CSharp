@@ -1,0 +1,3 @@
+var beverage = "espresso";
+var beverage2 = beverage + 2;
+print beverage2; // "espresso"

@@ -8,6 +8,7 @@ public interface IExprVisitor<out T>
     T VisitGrouping(GroupingExpr expr);
     T VisitLiteral(LiteralExpr expr);
     T VisitUnary(UnaryExpr expr);
+    T VisitVariable(VariableExpr expr);
 }
 
 public abstract record Expr
@@ -33,4 +34,9 @@ public record LiteralExpr(object? Value) : Expr
 public record UnaryExpr(Token Operator, Expr Right) : Expr
 {
     public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitUnary(this);
+}
+
+public record VariableExpr(Token Name) : Expr
+{
+    public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitVariable(this);
 }

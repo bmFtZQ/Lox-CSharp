@@ -14,13 +14,13 @@ public class Parser(IEnumerable<Token> tokens)
     /// statements.
     /// </summary>
     /// <returns>An AST populated with the list of statements.</returns>
-    public IEnumerable<Stmt> Parse()
+    public IEnumerable<Stmt?> Parse()
     {
-        List<Stmt> statements = [];
+        List<Stmt?> statements = [];
 
         while (!IsAtEnd)
         {
-            statements.Add(Statement());
+            statements.Add(Declaration());
         }
 
         return statements;
@@ -29,16 +29,43 @@ public class Parser(IEnumerable<Token> tokens)
     private class ParseException : Exception;
 
     /// <summary>
-    /// Scan for expression, lowest precedence.
+    /// Scan for declarations, lowest precedence, will cascade to lower level
+    /// statements.
     /// </summary>
-    /// <returns>An AST populated with the parsed expressions.</returns>
-    private Expr Expression()
+    /// <returns>An AST populate with the parsed declaration.</returns>
+    private Stmt? Declaration()
     {
-        return Equality();
+        try
+        {
+            return Match(TokenType.Var)
+                ? VarDeclaration()
+                : Statement();
+        }
+        catch (ParseException)
+        {
+            Synchronize();
+            return null;
+        }
     }
 
     /// <summary>
-    /// Scan for statements, lowest precedence.
+    /// Scan for variable declaration statement.
+    /// </summary>
+    /// <returns>An AST with the parsed variable declaration.</returns>
+    private VarStmt VarDeclaration()
+    {
+        var name = Consume(TokenType.Identifier, "Expected variable name.");
+
+        var initializer = Match(TokenType.Equal)
+            ? Expression()
+            : null;
+
+        Consume(TokenType.Semicolon, "Expected ';' after variable declaration.");
+        return new VarStmt(name, initializer);
+    }
+
+    /// <summary>
+    /// Scan for statements, will cascade to lower level statements.
     /// </summary>
     /// <returns>An AST populate with the parsed statement.</returns>
     private Stmt Statement()
@@ -72,6 +99,12 @@ public class Parser(IEnumerable<Token> tokens)
         Consume(TokenType.Semicolon, "Expect ';' after value.");
         return new ExpressionStmt(value);
     }
+
+    /// <summary>
+    /// Scan for expression, lowest precedence.
+    /// </summary>
+    /// <returns>An AST populated with the parsed expressions.</returns>
+    private Expr Expression() => Equality();
 
     /// <summary>
     /// Scan for equality expression, navigating further down hierarchy if no
@@ -187,6 +220,11 @@ public class Parser(IEnumerable<Token> tokens)
             return new GroupingExpr(expr);
         }
 
+        if (Match(TokenType.Identifier))
+        {
+            return new VariableExpr(Previous());
+        }
+
         throw Error(Peek(), "Expected an expression.");
     }
 
@@ -225,14 +263,9 @@ public class Parser(IEnumerable<Token> tokens)
     /// </summary>
     /// <param name="type">The token to test against the current.</param>
     /// <param name="message">The message for a possible error.</param>
-    private void Consume(TokenType type, string message)
+    private Token Consume(TokenType type, string message)
     {
-        if (Check(type))
-        {
-            Advance();
-            return;
-        }
-
+        if (Check(type)) return Advance();
         throw Error(Peek(), message);
     }
 

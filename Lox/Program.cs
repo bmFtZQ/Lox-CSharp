@@ -15,7 +15,7 @@ internal static class Program
         {
             case > 1:
                 Console.WriteLine("Usage: Lox <file>");
-                Environment.Exit(64);
+                System.Environment.Exit(64);
                 break;
 
             case 1:
@@ -33,8 +33,8 @@ internal static class Program
         var source = File.ReadAllText(filename);
         Run(source);
 
-        if (HadError) Environment.Exit(65);
-        if (HadRuntimeError) Environment.Exit(70);
+        if (HadError) System.Environment.Exit(65);
+        if (HadRuntimeError) System.Environment.Exit(70);
     }
 
     internal static void RunPrompt()
