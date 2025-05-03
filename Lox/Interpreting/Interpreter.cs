@@ -225,6 +225,16 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     }
 
     /// <summary>
+    /// Evaluate a function expression, creating a new anonymous function.
+    /// </summary>
+    /// <param name="expr">The function expression to evaluate.</param>
+    /// <returns>The new anonymous function.</returns>
+    public object VisitFunctionExpr(FunctionExpr expr)
+    {
+        return new LoxFunction(expr.Parameters, expr.Body, _environment);
+    }
+
+    /// <summary>
     /// Evaluate an expression.
     /// </summary>
     /// <param name="expr">The expression to evaluate.</param>
@@ -363,7 +373,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// <param name="stmt">The statement to execute.</param>
     public void VisitFunctionStmt(FunctionStmt stmt)
     {
-        var function = new LoxFunction(stmt);
+        var function = new LoxFunction(stmt.Parameters, stmt.Body, _environment, stmt.Name.Lexeme);
         _environment.Define(stmt.Name.Lexeme, function);
     }
 

@@ -38,7 +38,17 @@ public class Parser(IEnumerable<Token> tokens)
         try
         {
             if (Match(TokenType.Var)) return VarDeclaration();
-            if (Match(TokenType.Fun)) return Function();
+            if (Match(TokenType.Fun))
+            {
+                // Handle case of function expression appearing in expression
+                // statement.
+                if (Peek().Type == TokenType.LeftParenthesis)
+                {
+                    _current--;
+                    return ExpressionStatement();
+                }
+                return Function();
+            }
             return Statement();
         }
         catch (ParseException)
@@ -75,6 +85,23 @@ public class Parser(IEnumerable<Token> tokens)
 
         Consume(TokenType.LeftParenthesis, $"Expect '(' after {kind} name.");
 
+        var parameters = FunctionParameters();
+
+        Consume(TokenType.RightParenthesis, $"Expected ')' after {kind} parameters.");
+        Consume(TokenType.LeftBrace, $"Expected '{{' before {kind} body.");
+        var body = Block();
+
+        return new FunctionStmt(name, parameters, body);
+    }
+
+    /// <summary>
+    /// Parse a function's parameter list.
+    /// </summary>
+    /// <returns>
+    /// A list of Tokens representing a function's parameters.
+    /// </returns>
+    private List<Token> FunctionParameters()
+    {
         List<Token> parameters = [];
         if (!Check(TokenType.RightParenthesis))
         {
@@ -90,10 +117,7 @@ public class Parser(IEnumerable<Token> tokens)
             } while (Match(TokenType.Comma));
         }
 
-        Consume(TokenType.RightParenthesis, $"Expected ')' after {kind} parameters.");
-        Consume(TokenType.LeftBrace, $"Expected '{{' before {kind} body.");
-        var body = Block();
-        return new FunctionStmt(name, parameters, body);
+        return parameters;
     }
 
     /// <summary>
@@ -441,6 +465,30 @@ public class Parser(IEnumerable<Token> tokens)
             var op = Previous();
             var right = Unary();
             return new UnaryExpr(op, right);
+        }
+
+        return FunctionExpression();
+    }
+
+    /// <summary>
+    /// Scan for function expression, navigating further down hierarchy if no
+    /// function expression found.
+    /// </summary>
+    /// <returns>An AST populated with the parsed expressions.</returns>
+    private Expr FunctionExpression()
+    {
+        if (Match(TokenType.Fun))
+        {
+            var keyword = Previous();
+            Consume(TokenType.LeftParenthesis, "Expect '(' after function name.");
+
+            var parameters = FunctionParameters();
+
+            Consume(TokenType.RightParenthesis, "Expected ')' after function parameters.");
+            Consume(TokenType.LeftBrace, "Expected '{' before function body.");
+            var body = Block();
+
+            return new FunctionExpr(keyword, parameters, body);
         }
 
         return Call();
