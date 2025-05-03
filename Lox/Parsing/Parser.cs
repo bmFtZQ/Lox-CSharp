@@ -9,16 +9,21 @@ public class Parser(IEnumerable<Token> tokens)
 
     private bool IsAtEnd => Peek().Type == TokenType.Eof;
 
-    public Expr? Parse()
+    /// <summary>
+    /// Parse the list of tokens from a program into an AST with the list of
+    /// statements.
+    /// </summary>
+    /// <returns>An AST populated with the list of statements.</returns>
+    public IEnumerable<Stmt> Parse()
     {
-        try
+        List<Stmt> statements = [];
+
+        while (!IsAtEnd)
         {
-            return Expression();
+            statements.Add(Statement());
         }
-        catch (ParseException)
-        {
-            return null;
-        }
+
+        return statements;
     }
 
     private class ParseException : Exception;
@@ -33,6 +38,42 @@ public class Parser(IEnumerable<Token> tokens)
     }
 
     /// <summary>
+    /// Scan for statements, lowest precedence.
+    /// </summary>
+    /// <returns>An AST populate with the parsed statement.</returns>
+    private Stmt Statement()
+    {
+        if (Match(TokenType.Print))
+        {
+            return PrintStatement();
+        }
+
+        return ExpressionStatement();
+    }
+
+    /// <summary>
+    /// Scan for print statement.
+    /// </summary>
+    /// <returns>An AST populated with the parsed statement.</returns>
+    private PrintStmt PrintStatement()
+    {
+        var value = Expression();
+        Consume(TokenType.Semicolon, "Expect ';' after value.");
+        return new PrintStmt(value);
+    }
+
+    /// <summary>
+    /// Scan for expression statement.
+    /// </summary>
+    /// <returns>An AST populated with the parsed statement.</returns>
+    private ExpressionStmt ExpressionStatement()
+    {
+        var value = Expression();
+        Consume(TokenType.Semicolon, "Expect ';' after value.");
+        return new ExpressionStmt(value);
+    }
+
+    /// <summary>
     /// Scan for equality expression, navigating further down hierarchy if no
     /// equality expression found.
     /// </summary>
@@ -44,7 +85,7 @@ public class Parser(IEnumerable<Token> tokens)
         {
             var op = Previous();
             var right = Comparison();
-            expr = new Binary(expr, op, right);
+            expr = new BinaryExpr(expr, op, right);
         }
 
         return expr;
@@ -62,7 +103,7 @@ public class Parser(IEnumerable<Token> tokens)
         {
             var op = Previous();
             var right = Term();
-            expr = new Binary(expr, op, right);
+            expr = new BinaryExpr(expr, op, right);
         }
 
         return expr;
@@ -81,7 +122,7 @@ public class Parser(IEnumerable<Token> tokens)
         {
             var op = Previous();
             var right = Factor();
-            expr = new Binary(expr, op, right);
+            expr = new BinaryExpr(expr, op, right);
         }
 
         return expr;
@@ -100,7 +141,7 @@ public class Parser(IEnumerable<Token> tokens)
         {
             var op = Previous();
             var right = Unary();
-            expr = new Binary(expr, op, right);
+            expr = new BinaryExpr(expr, op, right);
         }
 
         return expr;
@@ -117,7 +158,7 @@ public class Parser(IEnumerable<Token> tokens)
         {
             var op = Previous();
             var right = Unary();
-            return new Unary(op, right);
+            return new UnaryExpr(op, right);
         }
 
         return Primary();
@@ -130,20 +171,20 @@ public class Parser(IEnumerable<Token> tokens)
     /// <returns>An AST populated with the parsed expressions.</returns>
     private Expr Primary()
     {
-        if (Match(TokenType.False)) return new Literal(false);
-        if (Match(TokenType.True)) return new Literal(true);
-        if (Match(TokenType.Nil)) return new Literal(null);
+        if (Match(TokenType.False)) return new LiteralExpr(false);
+        if (Match(TokenType.True)) return new LiteralExpr(true);
+        if (Match(TokenType.Nil)) return new LiteralExpr(null);
 
         if (Match(TokenType.Number, TokenType.String))
         {
-            return new Literal(Previous().Literal);
+            return new LiteralExpr(Previous().Literal);
         }
 
         if (Match(TokenType.LeftParenthesis))
         {
             var expr = Expression();
             Consume(TokenType.RightParenthesis, "Expect ')' after expression.");
-            return new Grouping(expr);
+            return new GroupingExpr(expr);
         }
 
         throw Error(Peek(), "Expected an expression.");

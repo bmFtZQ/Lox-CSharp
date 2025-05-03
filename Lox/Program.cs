@@ -59,7 +59,7 @@ internal static class Program
 
         var interpreter = new Interpreter();
 
-        if (HadError || expression is null) return;
+        if (HadError) return;
 
         interpreter.Interpret(expression);
     }

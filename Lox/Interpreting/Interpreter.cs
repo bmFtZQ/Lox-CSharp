@@ -8,18 +8,20 @@ public class RunTimeException(Token token, string message) : Exception(message)
     public Token Token { get; } = token;
 }
 
-public class Interpreter : IVisitor<object?>
+public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 {
     /// <summary>
-    /// Interpret an expression and print the result to the console.
+    /// Interpret a list of statements.
     /// </summary>
-    /// <param name="expression">The expression to interpret.</param>
-    public void Interpret(Expr expression)
+    /// <param name="statements">The statements to interpret.</param>
+    public void Interpret(IEnumerable<Stmt> statements)
     {
         try
         {
-            var value = Evaluate(expression);
-            Console.WriteLine(Stringify(value));
+            foreach (var statement in statements)
+            {
+                Execute(statement);
+            }
         }
         catch (RunTimeException exception)
         {
@@ -35,7 +37,7 @@ public class Interpreter : IVisitor<object?>
     /// <exception cref="RunTimeException">
     /// Thrown if operand types are incorrect for the specified operator.
     /// </exception>
-    public object? VisitBinary(Binary expr)
+    public object? VisitBinary(BinaryExpr expr)
     {
         var left = Evaluate(expr.Left);
         var right = Evaluate(expr.Right);
@@ -102,7 +104,7 @@ public class Interpreter : IVisitor<object?>
     /// </summary>
     /// <param name="expr">The grouping expression to evaluate.</param>
     /// <returns>The value computed from the expression.</returns>
-    public object? VisitGrouping(Grouping expr)
+    public object? VisitGrouping(GroupingExpr expr)
     {
         return Evaluate(expr.Expression);
     }
@@ -112,7 +114,7 @@ public class Interpreter : IVisitor<object?>
     /// </summary>
     /// <param name="expr">The literal expression to evaluate.</param>
     /// <returns>The literal value from the expression.</returns>
-    public object? VisitLiteral(Literal expr)
+    public object? VisitLiteral(LiteralExpr expr)
     {
         return expr.Value;
     }
@@ -122,7 +124,7 @@ public class Interpreter : IVisitor<object?>
     /// </summary>
     /// <param name="expr">The unary expression to evaluate.</param>
     /// <returns>The value computed from the expression.</returns>
-    public object? VisitUnary(Unary expr)
+    public object? VisitUnary(UnaryExpr expr)
     {
         var right = Evaluate(expr.Right);
 
@@ -148,6 +150,11 @@ public class Interpreter : IVisitor<object?>
     private object? Evaluate(Expr expr)
     {
         return expr.Accept(this);
+    }
+
+    private void Execute(Stmt statement)
+    {
+        statement.Accept(this);
     }
 
     /// <summary>
@@ -190,4 +197,15 @@ public class Interpreter : IVisitor<object?>
         not null => value.ToString(),
         _ => null
     } ?? "nil";
+
+    public void VisitExpressionStmt(ExpressionStmt stmt)
+    {
+        Evaluate(stmt.Expression);
+    }
+
+    public void VisitPrintStmt(PrintStmt stmt)
+    {
+        var value = Evaluate(stmt.Expression);
+        Console.WriteLine(Stringify(value));
+    }
 }

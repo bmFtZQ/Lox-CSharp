@@ -2,27 +2,35 @@ using Lox.Tokens;
 
 namespace Lox.Parsing;
 
+public interface IExprVisitor<out T>
+{
+    T VisitBinary(BinaryExpr expr);
+    T VisitGrouping(GroupingExpr expr);
+    T VisitLiteral(LiteralExpr expr);
+    T VisitUnary(UnaryExpr expr);
+}
+
 public abstract record Expr
 {
-    public abstract T Accept<T>(IVisitor<T> visitor);
+    public abstract T Accept<T>(IExprVisitor<T> visitor);
 }
 
-public record Binary(Expr Left, Token Operator, Expr Right) : Expr
+public record BinaryExpr(Expr Left, Token Operator, Expr Right) : Expr
 {
-    public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitBinary(this);
+    public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitBinary(this);
 }
 
-public record Grouping(Expr Expression) : Expr
+public record GroupingExpr(Expr Expression) : Expr
 {
-    public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitGrouping(this);
+    public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitGrouping(this);
 }
 
-public record Literal(object? Value) : Expr
+public record LiteralExpr(object? Value) : Expr
 {
-    public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitLiteral(this);
+    public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitLiteral(this);
 }
 
-public record Unary(Token Operator, Expr Right) : Expr
+public record UnaryExpr(Token Operator, Expr Right) : Expr
 {
-    public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitUnary(this);
+    public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitUnary(this);
 }
