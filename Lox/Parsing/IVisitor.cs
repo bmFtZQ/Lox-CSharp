@@ -1,6 +1,6 @@
-namespace Lox.Parser;
+namespace Lox.Parsing;
 
-public interface IVisitor<T>
+public interface IVisitor<out T>
 {
     T VisitBinary(Binary expr);
     T VisitGrouping(Grouping expr);

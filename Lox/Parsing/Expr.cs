@@ -1,6 +1,6 @@
 using Lox.Tokens;
 
-namespace Lox.Parser;
+namespace Lox.Parsing;
 
 public abstract record Expr
 {

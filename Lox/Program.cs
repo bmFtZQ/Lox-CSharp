@@ -1,4 +1,5 @@
-﻿using Lox.Tokens;
+﻿using Lox.Parsing;
+using Lox.Tokens;
 
 namespace Lox;
 
@@ -50,16 +51,18 @@ internal static class Program
         var scanner = new Scanner(source);
         var tokens = scanner.ScanTokens();
 
-        foreach (var token in tokens)
-        {
-            Console.WriteLine(token);
-        }
+        var parser = new Parser(tokens);
+        var expression = parser.Parse();
+
+        if (HadError) return;
+        Console.WriteLine(new AstPrinter().Print(expression!));
     }
 
-    internal static void Error(int line, string message)
-    {
+    internal static void Error(int line, string message) =>
         Report(line, "", message);
-    }
+
+    internal static void Error(Token token, string message) =>
+        Report(token.Line, token.Type != TokenType.Eof ? " at end" : $" at '{token.Lexeme}'", message);
 
     internal static void Report(int line, string where, string message)
     {

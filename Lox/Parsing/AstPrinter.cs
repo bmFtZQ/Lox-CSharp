@@ -1,4 +1,4 @@
-namespace Lox.Parser;
+namespace Lox.Parsing;
 
 public class AstPrinter : IVisitor<string>
 {
