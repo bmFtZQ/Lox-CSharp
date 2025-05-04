@@ -1,3 +1,5 @@
+var start = clock();
+
 fun makeCounter() {
     var i = 0;
 
@@ -13,3 +15,6 @@ fun makeCounter() {
     print counter();
     print counter();
 })();
+
+var end = clock() - start;
+print end;

@@ -1,4 +1,5 @@
-﻿using Lox.Interpreting;
+﻿using Lox.Analysis;
+using Lox.Interpreting;
 using Lox.Parsing;
 using Lox.Tokens;
 
@@ -55,13 +56,18 @@ internal static class Program
         var tokens = scanner.ScanTokens();
 
         var parser = new Parser(tokens);
-        var expression = parser.Parse();
+        var statements = parser.Parse();
 
-        var interpreter = new Interpreter();
-
+        // Return on any parsing errors.
         if (HadError) return;
 
-        interpreter.Interpret(expression);
+        var interpreter = new Interpreter();
+        var resolver = new Resolver(interpreter);
+        resolver.Resolve(statements);
+
+        // Return on any resolution errors.
+        if (HadError) return;
+        interpreter.Interpret(statements);
     }
 
     internal static void Error(int line, string message) =>

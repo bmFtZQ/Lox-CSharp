@@ -4,6 +4,7 @@ namespace Lox.Interpreting;
 
 public class Environment(Environment? enclosing = null)
 {
+    private readonly Environment? _enclosing = enclosing;
     private readonly Dictionary<string, object?> _values = [];
 
     /// <summary>
@@ -20,7 +21,7 @@ public class Environment(Environment? enclosing = null)
     /// Get an existing variable from the environment.
     /// </summary>
     /// <param name="name">The variable to get.</param>
-    /// <returns></returns>
+    /// <returns>The variable value from the environment.</returns>
     /// <exception cref="RunTimeException">
     /// Thrown if attempted to access a variable that doesn't exist.
     /// </exception>
@@ -31,12 +32,39 @@ public class Environment(Environment? enclosing = null)
             return value;
         }
 
-        if (enclosing is not null)
+        if (_enclosing is not null)
         {
-            return enclosing.Get(name);
+            return _enclosing.Get(name);
         }
 
         throw new RunTimeException(name, $"Undefined variable '{name.Lexeme}'.");
+    }
+
+    /// <summary>
+    /// Get an existing variable from specified environment.
+    /// </summary>
+    /// <param name="distance">The parent environment to find the variable.</param>
+    /// <param name="name">The name of the variable to get.</param>
+    /// <returns>The variable value from the environment.</returns>
+    public object? GetAt(int distance, string name)
+    {
+        return Ancestor(distance)?._values[name];
+    }
+
+    /// <summary>
+    /// Get a parent environment using its distance from the current.
+    /// </summary>
+    /// <param name="distance">How many levels to traverse up.</param>
+    /// <returns>The parent environment specified by the distance.</returns>
+    private Environment? Ancestor(int distance)
+    {
+        var env = this;
+        for (var i = 0; i < distance; i++)
+        {
+            env = env?._enclosing;
+        }
+
+        return env;
     }
 
     /// <summary>
@@ -54,12 +82,28 @@ public class Environment(Environment? enclosing = null)
             return;
         }
 
-        if (enclosing is not null)
+        if (_enclosing is not null)
         {
-            enclosing.Assign(name, value);
+            _enclosing.Assign(name, value);
             return;
         }
 
         throw new RunTimeException(name, $"Undefined variable '{name.Lexeme}'.");
+    }
+
+    /// <summary>
+    /// Assign an existing variable from specified environment.
+    /// </summary>
+    /// <param name="distance">The parent environment to find the variable.</param>
+    /// <param name="name">The name of the variable to assign.</param>
+    /// <param name="value">The value to assign the variable.</param>
+    public void AssignAt(int distance, Token name, object? value)
+    {
+        var env = Ancestor(distance);
+
+        if (env is not null)
+        {
+            env._values[name.Lexeme] = value;
+        }
     }
 }

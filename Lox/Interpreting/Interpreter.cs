@@ -22,6 +22,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 {
     private Environment _environment;
     public Environment Globals { get; } = new();
+    private readonly Dictionary<Expr, int> _locals = [];
 
     public Interpreter()
     {
@@ -46,6 +47,17 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
         {
             Program.RunTimeError(exception);
         }
+    }
+
+    /// <summary>
+    /// Assign a depth for a variable, so it can be tracked to its original
+    /// environment.
+    /// </summary>
+    /// <param name="expr">The variable expression to resolve.</param>
+    /// <param name="depth">How many levels further up the variable is defined.</param>
+    public void Resolve(Expr expr, int depth)
+    {
+        _locals[expr] = depth;
     }
 
     /// <summary>
@@ -164,7 +176,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// </summary>
     /// <param name="expr">The variable expression to evaluate.</param>
     /// <returns>The value from the variable.</returns>
-    public object? VisitVariableExpr(VariableExpr expr) => _environment.Get(expr.Name);
+    public object? VisitVariableExpr(VariableExpr expr) => LookUpVariable(expr.Name, expr);
 
     /// <summary>
     /// Evaluate an assignment expression.
@@ -174,7 +186,16 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     public object? VisitAssignExpr(AssignExpr expr)
     {
         var value = Evaluate(expr.Value);
-        _environment.Assign(expr.Name, value);
+
+        if (_locals.TryGetValue(expr, out var distance))
+        {
+            _environment.AssignAt(distance, expr.Name, value);
+        }
+        else
+        {
+            Globals.Assign(expr.Name, value);
+        }
+
         return value;
     }
 
@@ -232,6 +253,19 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     public object VisitFunctionExpr(FunctionExpr expr)
     {
         return new LoxFunction(expr.Parameters, expr.Body, _environment);
+    }
+
+    /// <summary>
+    /// Look up a variable and retrieve its value.
+    /// </summary>
+    /// <param name="name">The variable to look up.</param>
+    /// <param name="expr">The expression where the lookup occurs.</param>
+    /// <returns>The local variable, global variable, or null.</returns>
+    private object? LookUpVariable(Token name, Expr expr)
+    {
+        return _locals.TryGetValue(expr, out var distance)
+            ? _environment.GetAt(distance, name.Lexeme)
+            : Globals.Get(name);
     }
 
     /// <summary>

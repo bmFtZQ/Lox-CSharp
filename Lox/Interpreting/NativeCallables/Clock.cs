@@ -8,7 +8,7 @@ public class ClockCallable : ILoxCallable
 
     public object? Call(Interpreter interpreter, IReadOnlyList<object?> arguments)
     {
-        return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0;
+        return DateTimeOffset.Now.ToUnixTimeMilliseconds() / 1000.0;
     }
 
     public override string ToString() => "<native fn>";
