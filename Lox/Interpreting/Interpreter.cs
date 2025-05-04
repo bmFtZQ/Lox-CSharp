@@ -282,9 +282,37 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
         return value;
     }
 
+    /// <summary>
+    /// Evaluate a 'this' expression.
+    /// </summary>
+    /// <param name="expr">The expression to evaluate.</param>
+    /// <returns>The value of this, should be a LoxInstance.</returns>
     public object? VisitThisExpr(ThisExpr expr)
     {
         return LookUpVariable(expr.Keyword, expr);
+    }
+
+    /// <summary>
+    /// Evaluate a super method expression.
+    /// </summary>
+    /// <param name="expr">The expression to evaluate.</param>
+    /// <returns>The superclass method bound to 'this'.</returns>
+    /// <exception cref="RunTimeException">
+    /// Thrown if super or the specified method was not found.
+    /// </exception>
+    public object VisitSuperExpr(SuperExpr expr)
+    {
+        var distance = _locals[expr];
+        var superclass = _environment.GetAt(distance, "super") as LoxClass;
+        var obj = _environment.GetAt(distance - 1, "this") as LoxInstance;
+        var method = superclass?.FindMethod(expr.Method.Lexeme);
+
+        if (method is null)
+        {
+            throw new RunTimeException(expr.Method, $"Undefined property {expr.Method.Lexeme}.");
+        }
+
+        return method.Bind(obj!);
     }
 
     /// <summary>
@@ -389,7 +417,8 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     public string Stringify(object? value) => value switch
     {
         bool b => b ? "true" : "false",
-        LoxInstance instance => instance.Class.FindMethod("toString")?.Bind(instance).Call(this, []) as string ?? instance.ToString(),
+        LoxInstance instance => instance.Class.FindMethod("toString")?.Bind(instance).Call(this, []) as string ??
+                                instance.ToString(),
         not null => value.ToString(),
         _ => null
     } ?? "nil";
@@ -457,11 +486,22 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// <summary>
     /// Execute a class declaration statement.
     /// </summary>
-    /// <param name="stmt">The statement to exectute.</param>
+    /// <param name="stmt">The statement to execute.</param>
     public void VisitClassStmt(ClassStmt stmt)
     {
+        var superclass = stmt.SuperClass is not null
+            ? Evaluate(stmt.SuperClass) as LoxClass
+              ?? throw new RunTimeException(stmt.SuperClass?.Name, "Super class must be a class.")
+            : null;
+
         _environment.Define(stmt.Name.Lexeme);
 
+        var enclosing = _environment;
+        if (stmt.SuperClass is not null)
+        {
+            _environment = new Environment(_environment);
+            _environment.Define("super", superclass);
+        }
 
         Dictionary<string, LoxFunction> methods = [];
 
@@ -473,7 +513,9 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
             methods[name] = function;
         }
 
-        var cls = new LoxClass(stmt.Name.Lexeme, methods);
+        var cls = new LoxClass(stmt.Name.Lexeme, superclass, methods);
+
+        _environment = enclosing;
         _environment.Assign(stmt.Name, cls);
     }
 

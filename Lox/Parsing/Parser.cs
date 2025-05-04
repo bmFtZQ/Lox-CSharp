@@ -84,6 +84,11 @@ public class Parser(IEnumerable<Token> tokens)
     private ClassStmt ClassDeclaration()
     {
         var name = Consume(TokenType.Identifier, "Expected class name.");
+
+        var superclass = Match(TokenType.Less)
+            ? new VariableExpr(Consume(TokenType.Identifier, "Expected superclass name."))
+            : null;
+
         Consume(TokenType.LeftBrace, "Expected '{' before class body.");
 
         List<FunctionStmt> methods = [];
@@ -94,7 +99,7 @@ public class Parser(IEnumerable<Token> tokens)
 
         Consume(TokenType.RightBrace, "Expected '}' after class body.");
 
-        return new ClassStmt(name, methods);
+        return new ClassStmt(name, superclass, methods);
     }
 
     /// <summary>
@@ -577,6 +582,13 @@ public class Parser(IEnumerable<Token> tokens)
         }
 
         if (Match(TokenType.This)) return new ThisExpr(Previous());
+        if (Match(TokenType.Super))
+        {
+            var keyword = Previous();
+            Consume(TokenType.Dot, "Expected '.' after 'super'.");
+            var method = Consume(TokenType.Identifier, "Expected superclass method name.");
+            return new SuperExpr(keyword, method);
+        }
 
         if (Match(TokenType.Identifier))
         {

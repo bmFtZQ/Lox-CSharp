@@ -15,6 +15,7 @@ public interface IExprVisitor<out T>
     T VisitGetExpr(GetExpr expr);
     T VisitSetExpr(SetExpr expr);
     T VisitThisExpr(ThisExpr expr);
+    T VisitSuperExpr(SuperExpr expr);
     T VisitFunctionExpr(FunctionExpr expr);
 }
 
@@ -76,6 +77,11 @@ public record SetExpr(Expr Object, Token Name, Expr Value) : Expr
 public record ThisExpr(Token Keyword) : Expr
 {
     public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitThisExpr(this);
+}
+
+public record SuperExpr(Token Keyword, Token Method) : Expr
+{
+    public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitSuperExpr(this);
 }
 
 public record FunctionExpr(Token Keyword, IReadOnlyList<Token> Parameters, IReadOnlyList<Stmt?> Body) : Expr

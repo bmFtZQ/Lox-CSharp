@@ -45,7 +45,7 @@ public record FunctionStmt(Token Name, IReadOnlyList<Token> Parameters, IReadOnl
     public override void Accept(IStmtVisitor visitor) => visitor.VisitFunctionStmt(this);
 }
 
-public record ClassStmt(Token Name, IReadOnlyList<FunctionStmt> Methods) : Stmt
+public record ClassStmt(Token Name, VariableExpr? SuperClass, IReadOnlyList<FunctionStmt> Methods) : Stmt
 {
     public override void Accept(IStmtVisitor visitor) => visitor.VisitClassStmt(this);
 }

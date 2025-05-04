@@ -1,16 +1,19 @@
-class Object
-{
-    init(a, b)
-    {
-        this.a = a;
-        this.b = b;
-    }
-
-    toString()
-    {
-        return "Object { " + this.a + ", " + this.b + " }";
-    }
+class A {
+  method() {
+    print "A method";
+  }
 }
 
-var obj = Object(10, 20);
-print obj;
+class B < A {
+  method() {
+    print "B method";
+  }
+
+  test() {
+    super.method();
+  }
+}
+
+class C < B {}
+
+C().test();

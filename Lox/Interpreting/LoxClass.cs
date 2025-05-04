@@ -1,8 +1,12 @@
 namespace Lox.Interpreting;
 
-public class LoxClass(string name, Dictionary<string, LoxFunction> methods) : ILoxCallable
+public class LoxClass(
+    string name,
+    LoxClass? superclass,
+    Dictionary<string, LoxFunction> methods) : ILoxCallable
 {
     public string Name { get; } = name;
+    public LoxClass? SuperClass { get; } = superclass;
     public Dictionary<string, LoxFunction> Methods { get; } = methods;
 
     public int Arity => FindMethod("init")?.Arity ?? 0;
@@ -28,7 +32,7 @@ public class LoxClass(string name, Dictionary<string, LoxFunction> methods) : IL
     /// <returns>The method if exists, null otherwise.</returns>
     public LoxFunction? FindMethod(string name)
     {
-        return Methods.GetValueOrDefault(name);
+        return Methods.GetValueOrDefault(name) ?? SuperClass?.FindMethod(name);
     }
 
     public override string ToString() => Name;
