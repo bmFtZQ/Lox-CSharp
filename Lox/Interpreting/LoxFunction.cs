@@ -16,7 +16,7 @@ public class LoxFunction(
     IReadOnlyList<Stmt?> body,
     Environment closure,
     string? name = null,
-    bool isInitializer = false) : ILoxCallable
+    bool isInitializer = false) : ILoxMethod
 {
     public int Arity => parameters.Count;
 
@@ -52,7 +52,7 @@ public class LoxFunction(
     /// </summary>
     /// <param name="instance">The class instance to bind to.</param>
     /// <returns>A copy of this function bound to the instance.</returns>
-    public LoxFunction Bind(LoxInstance instance)
+    public ILoxMethod Bind(LoxInstance instance)
     {
         var env = new Environment(closure);
         env.Define("this", instance);

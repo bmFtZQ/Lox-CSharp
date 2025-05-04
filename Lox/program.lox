@@ -1,19 +1,15 @@
-class A {
-  method() {
-    print "A method";
-  }
+Console.write("How many items? ");
+var response = Console.readLine();
+var count = number(response) or 5;
+
+var array = Array(count);
+
+for (var i = 0; i < array.length(); i = i + 1) {
+    array.set(i, i * i);
 }
 
-class B < A {
-  method() {
-    print "B method";
-  }
+print array;
 
-  test() {
-    super.method();
-  }
-}
-
-class C < B {}
-
-C().test();
+array.foreach(fun (e, i) {
+    print i + 1 + ": " + e;
+});

@@ -1,4 +1,4 @@
-using Lox.Interpreting.NativeCallables;
+using Lox.Interpreting.LoxNative;
 using Lox.Parsing;
 using Lox.Tokens;
 
@@ -26,7 +26,14 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 
     public Interpreter()
     {
-        Globals.Define("clock", ClockCallable.Instance);
+        Globals.Define("Array", LoxArray.MakeClass(this));
+        Globals.Define("Console", LoxConsole.MakeClass(this));
+
+        foreach (var (name, function) in GlobalFunctions.MakeFunctions(this))
+        {
+            Globals.Define(name, function);
+        }
+
         _environment = Globals;
     }
 
@@ -417,7 +424,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     public string Stringify(object? value) => value switch
     {
         bool b => b ? "true" : "false",
-        LoxInstance instance => instance.Class.FindMethod("toString")?.Bind(instance).Call(this, []) as string ??
+        LoxInstance instance => instance.Class?.FindMethod("toString")?.Bind(instance).Call(this, []) as string ??
                                 instance.ToString(),
         not null => value.ToString(),
         _ => null
@@ -497,14 +504,15 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
         _environment.Define(stmt.Name.Lexeme);
 
         var enclosing = _environment;
+
+        // Instance method super environments.
         if (stmt.SuperClass is not null)
         {
             _environment = new Environment(_environment);
             _environment.Define("super", superclass);
         }
 
-        Dictionary<string, LoxFunction> methods = [];
-
+        Dictionary<string, ILoxMethod> methods = [];
         foreach (var method in stmt.Methods)
         {
             var name = method.Name.Lexeme;
@@ -513,7 +521,22 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
             methods[name] = function;
         }
 
-        var cls = new LoxClass(stmt.Name.Lexeme, superclass, methods);
+        // Static method super environments.
+        if (stmt.StaticMethods.Count > 0 && stmt.SuperClass is not null)
+        {
+            _environment = new Environment(_environment);
+            _environment.Define("super", superclass?.Class);
+        }
+
+        Dictionary<string, ILoxMethod> staticMethods = [];
+        foreach (var method in stmt.StaticMethods)
+        {
+            var name = method.Name.Lexeme;
+            var function = new LoxFunction(method.Parameters, method.Body, _environment, name);
+            staticMethods[name] = function;
+        }
+
+        var cls = new LoxClass(stmt.Name.Lexeme, superclass, methods, staticMethods);
 
         _environment = enclosing;
         _environment.Assign(stmt.Name, cls);

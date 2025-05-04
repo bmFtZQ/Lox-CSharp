@@ -19,7 +19,8 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
         None,
         Function,
         Initializer,
-        Method
+        Method,
+        StaticMethod
     }
 
     private enum ClassType
@@ -227,6 +228,11 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
                 ? FunctionType.Initializer
                 : FunctionType.Method;
             ResolveFunction(method, declaration);
+        }
+
+        foreach (var method in stmt.StaticMethods)
+        {
+            ResolveFunction(method, FunctionType.Method);
         }
 
         EndScope();

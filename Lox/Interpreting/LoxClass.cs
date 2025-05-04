@@ -1,13 +1,26 @@
 namespace Lox.Interpreting;
 
-public class LoxClass(
-    string name,
-    LoxClass? superclass,
-    Dictionary<string, LoxFunction> methods) : ILoxCallable
+public class LoxClass : LoxInstance, ILoxCallable
 {
-    public string Name { get; } = name;
-    public LoxClass? SuperClass { get; } = superclass;
-    public Dictionary<string, LoxFunction> Methods { get; } = methods;
+    public LoxClass(string name,
+        LoxClass? superclass = null,
+        Dictionary<string, ILoxMethod>? methods = null,
+        Dictionary<string, ILoxMethod>? staticMethods = null)
+    {
+        Name = name;
+        SuperClass = superclass;
+        Methods = methods ?? [];
+
+        if (staticMethods is not null)
+        {
+            var meta = new LoxClass($"__{name}_metaclass", superclass?.Class, staticMethods);
+            Class = meta;
+        }
+    }
+
+    public string Name { get; }
+    public LoxClass? SuperClass { get; }
+    public Dictionary<string, ILoxMethod> Methods { get; }
 
     public int Arity => FindMethod("init")?.Arity ?? 0;
 
@@ -30,10 +43,10 @@ public class LoxClass(
     /// </summary>
     /// <param name="name">The name of the method to find.</param>
     /// <returns>The method if exists, null otherwise.</returns>
-    public LoxFunction? FindMethod(string name)
+    public ILoxMethod? FindMethod(string name)
     {
         return Methods.GetValueOrDefault(name) ?? SuperClass?.FindMethod(name);
     }
 
-    public override string ToString() => Name;
+    public override string ToString() => $"<class {Name}>";
 }

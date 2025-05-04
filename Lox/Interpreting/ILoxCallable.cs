@@ -22,3 +22,11 @@ public interface ILoxCallable
     /// </returns>
     public object? Call(Interpreter interpreter, IReadOnlyList<object?> arguments);
 }
+
+/// <summary>
+/// Methods are callables that can be bound to an instance.
+/// </summary>
+public interface ILoxMethod : ILoxCallable
+{
+    ILoxMethod Bind(LoxInstance instance);
+}

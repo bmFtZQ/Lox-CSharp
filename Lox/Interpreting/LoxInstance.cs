@@ -2,10 +2,15 @@ using Lox.Tokens;
 
 namespace Lox.Interpreting;
 
-public class LoxInstance(LoxClass cls)
+public class LoxInstance(LoxClass? cls = null)
 {
-    public LoxClass Class { get; } = cls;
+    public LoxClass? Class { get; protected init; } = cls;
     public Dictionary<string, object?> Fields { get; } = [];
+
+    /// <summary>
+    /// Arbitrary data inaccessible to Lox, can be used to store native data.
+    /// </summary>
+    public object? Data { get; set; }
 
     /// <summary>
     /// Get a property value from this instance.
@@ -15,15 +20,17 @@ public class LoxInstance(LoxClass cls)
     /// <exception cref="RunTimeException">
     /// Thrown if the specified property does not exist.
     /// </exception>
-    public object? Get(Token name)
+    public object? Get(Token name) => Get(name.Lexeme, name);
+
+    public object? Get(string name, Token? token = null)
     {
-        if (Fields.TryGetValue(name.Lexeme, out var value))
+        if (Fields.TryGetValue(name, out var value))
         {
             return value;
         }
 
-        return Class.FindMethod(name.Lexeme)?.Bind(this) ??
-               throw new RunTimeException(name, $"Undefined property '{name.Lexeme}'.");
+        return Class?.FindMethod(name)?.Bind(this) ??
+               throw new RunTimeException(token, $"Undefined property '{name}'.");
     }
 
     /// <summary>
@@ -36,5 +43,10 @@ public class LoxInstance(LoxClass cls)
         Fields[name.Lexeme] = value;
     }
 
-    public override string ToString() => $"<{Class.Name} instance>";
+    public void Set(string name, object? value)
+    {
+        Fields[name] = value;
+    }
+
+    public override string ToString() => $"<{Class?.Name} instance>";
 }

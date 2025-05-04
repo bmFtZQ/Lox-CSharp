@@ -92,14 +92,22 @@ public class Parser(IEnumerable<Token> tokens)
         Consume(TokenType.LeftBrace, "Expected '{' before class body.");
 
         List<FunctionStmt> methods = [];
+        List<FunctionStmt> staticMethods = [];
         while (!Check(TokenType.RightBrace) && !IsAtEnd)
         {
-            methods.Add(Function("method"));
+            if (Match(TokenType.Class))
+            {
+                staticMethods.Add(Function("static method"));
+            }
+            else
+            {
+                methods.Add(Function("method"));
+            }
         }
 
         Consume(TokenType.RightBrace, "Expected '}' after class body.");
 
-        return new ClassStmt(name, superclass, methods);
+        return new ClassStmt(name, superclass, methods, staticMethods);
     }
 
     /// <summary>
