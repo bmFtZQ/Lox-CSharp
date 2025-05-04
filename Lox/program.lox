@@ -1,20 +1,8 @@
-var start = clock();
-
-fun makeCounter() {
-    var i = 0;
-
-    return fun () {
-        return i = i + 1;
-    };
+class Egotist {
+  speak() {
+    print this;
+  }
 }
 
-(fun () {
-    var counter = makeCounter();
-
-    print counter();
-    print counter();
-    print counter();
-})();
-
-var end = clock() - start;
-print end;
+var method = Egotist().speak;
+method();

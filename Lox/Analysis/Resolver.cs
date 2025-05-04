@@ -12,11 +12,20 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
 {
     private readonly List<Dictionary<string, bool>> _scopes = [];
     private FunctionType _currentFunction = FunctionType.None;
+    private ClassType _currentClass = ClassType.None;
 
     private enum FunctionType
     {
         None,
-        Function
+        Function,
+        Initializer,
+        Method
+    }
+
+    private enum ClassType
+    {
+        None,
+        Class
     }
 
     /// <summary>
@@ -152,9 +161,16 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
 
     public void VisitReturnStmt(ReturnStmt stmt)
     {
-        if (_currentFunction == FunctionType.None)
+        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+        switch (_currentFunction)
         {
-            Program.Error(stmt.Keyword, "Can't return from top-level code.");
+            case FunctionType.None:
+                Program.Error(stmt.Keyword, "Can't return from top-level code.");
+                break;
+
+            case FunctionType.Initializer when stmt.Value is not null:
+                Program.Error(stmt.Keyword, "Can't return a value from an initializer.");
+                break;
         }
 
         Resolve(stmt.Value);
@@ -177,6 +193,29 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
         Declare(stmt.Name);
         Define(stmt.Name);
         ResolveFunction(stmt, FunctionType.Function);
+    }
+
+    public void VisitClassStmt(ClassStmt stmt)
+    {
+        var enclosingClass = _currentClass;
+        _currentClass = ClassType.Class;
+
+        Declare(stmt.Name);
+        Define(stmt.Name);
+
+        BeginScope();
+        _scopes[^1]["this"] = true;
+
+        foreach (var method in stmt.Methods)
+        {
+            var declaration = method.Name.Lexeme == "init"
+                ? FunctionType.Initializer
+                : FunctionType.Method;
+            ResolveFunction(method, declaration);
+        }
+
+        EndScope();
+        _currentClass = enclosingClass;
     }
 
     public void VisitBlockStmt(BlockStmt stmt)
@@ -256,6 +295,31 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
             Resolve(arg);
         }
 
+        return null;
+    }
+
+    public object? VisitGetExpr(GetExpr expr)
+    {
+        Resolve(expr.Object);
+        return null;
+    }
+
+    public object? VisitSetExpr(SetExpr expr)
+    {
+        Resolve(expr.Value);
+        Resolve(expr.Object);
+        return null;
+    }
+
+    public object? VisitThisExpr(ThisExpr expr)
+    {
+        if (_currentClass == ClassType.None)
+        {
+            Program.Error(expr.Keyword, "Can't use 'this' outside of a class.");
+            return null;
+        }
+
+        ResolveLocal(expr, expr.Keyword);
         return null;
     }
 

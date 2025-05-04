@@ -246,6 +246,48 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     }
 
     /// <summary>
+    /// Evaluate a get expression, gets a property value from an instance.
+    /// </summary>
+    /// <param name="expr">The get expression to evaluate.</param>
+    /// <returns>The specified value from the instance.</returns>
+    /// <exception cref="RunTimeException">
+    /// Thrown if attempt to get field on non-instance data.
+    /// </exception>
+    public object VisitGetExpr(GetExpr expr)
+    {
+        var obj = Evaluate(expr.Object);
+        return (obj as LoxInstance)?.Get(expr.Name)
+               ?? throw new RunTimeException(expr.Name, "Only instances have properties.");
+    }
+
+    /// <summary>
+    /// Evaluate a set expression, sets a property value on an instance.
+    /// </summary>
+    /// <param name="expr">The set expression to evaluate.</param>
+    /// <returns>The value computed from the expression.</returns>
+    /// <exception cref="RunTimeException">
+    /// Thrown if attempt to set field on non-instance data.
+    /// </exception>
+    public object? VisitSetExpr(SetExpr expr)
+    {
+        var obj = Evaluate(expr.Object);
+
+        if (obj is not LoxInstance instance)
+        {
+            throw new RunTimeException(expr.Name, "Only instances have fields.");
+        }
+
+        var value = Evaluate(expr.Value);
+        instance.Set(expr.Name, value);
+        return value;
+    }
+
+    public object? VisitThisExpr(ThisExpr expr)
+    {
+        return LookUpVariable(expr.Keyword, expr);
+    }
+
+    /// <summary>
     /// Evaluate a function expression, creating a new anonymous function.
     /// </summary>
     /// <param name="expr">The function expression to evaluate.</param>
@@ -409,6 +451,29 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     {
         var function = new LoxFunction(stmt.Parameters, stmt.Body, _environment, stmt.Name.Lexeme);
         _environment.Define(stmt.Name.Lexeme, function);
+    }
+
+    /// <summary>
+    /// Execute a class declaration statement.
+    /// </summary>
+    /// <param name="stmt">The statement to exectute.</param>
+    public void VisitClassStmt(ClassStmt stmt)
+    {
+        _environment.Define(stmt.Name.Lexeme);
+
+
+        Dictionary<string, LoxFunction> methods = [];
+
+        foreach (var method in stmt.Methods)
+        {
+            var name = method.Name.Lexeme;
+            var function = new LoxFunction(method.Parameters, method.Body,
+                _environment, name, name == "init");
+            methods[name] = function;
+        }
+
+        var cls = new LoxClass(stmt.Name.Lexeme, methods);
+        _environment.Assign(stmt.Name, cls);
     }
 
     /// <summary>

@@ -12,6 +12,9 @@ public interface IExprVisitor<out T>
     T VisitAssignExpr(AssignExpr expr);
     T VisitLogicalExpr(LogicalExpr expr);
     T VisitCallExpr(CallExpr expr);
+    T VisitGetExpr(GetExpr expr);
+    T VisitSetExpr(SetExpr expr);
+    T VisitThisExpr(ThisExpr expr);
     T VisitFunctionExpr(FunctionExpr expr);
 }
 
@@ -58,6 +61,21 @@ public record LogicalExpr(Token Operator, Expr Left, Expr Right) : Expr
 public record CallExpr(Expr Callee, Token Parenthesis, IReadOnlyList<Expr> Arguments) : Expr
 {
     public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitCallExpr(this);
+}
+
+public record GetExpr(Expr Object, Token Name) : Expr
+{
+    public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitGetExpr(this);
+}
+
+public record SetExpr(Expr Object, Token Name, Expr Value) : Expr
+{
+    public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitSetExpr(this);
+}
+
+public record ThisExpr(Token Keyword) : Expr
+{
+    public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitThisExpr(this);
 }
 
 public record FunctionExpr(Token Keyword, IReadOnlyList<Token> Parameters, IReadOnlyList<Stmt?> Body) : Expr

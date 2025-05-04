@@ -9,6 +9,7 @@ public interface IStmtVisitor
     void VisitReturnStmt(ReturnStmt stmt);
     void VisitVarStmt(VarStmt stmt);
     void VisitFunctionStmt(FunctionStmt stmt);
+    void VisitClassStmt(ClassStmt stmt);
     void VisitBlockStmt(BlockStmt stmt);
     void VisitIfStmt(IfStmt stmt);
     void VisitWhileStmt(WhileStmt stmt);
@@ -44,17 +45,22 @@ public record FunctionStmt(Token Name, IReadOnlyList<Token> Parameters, IReadOnl
     public override void Accept(IStmtVisitor visitor) => visitor.VisitFunctionStmt(this);
 }
 
+public record ClassStmt(Token Name, IReadOnlyList<FunctionStmt> Methods) : Stmt
+{
+    public override void Accept(IStmtVisitor visitor) => visitor.VisitClassStmt(this);
+}
+
 public record BlockStmt(IReadOnlyList<Stmt?> Statements) : Stmt
 {
     public override void Accept(IStmtVisitor visitor) => visitor.VisitBlockStmt(this);
 }
 
-public record IfStmt(Expr Condition, Stmt ThenBranch, Stmt? ElseBranch) : Stmt
+public record IfStmt(Expr Condition, Stmt? ThenBranch, Stmt? ElseBranch) : Stmt
 {
     public override void Accept(IStmtVisitor visitor) => visitor.VisitIfStmt(this);
 }
 
-public record WhileStmt(Expr Condition, Stmt Body) : Stmt
+public record WhileStmt(Expr Condition, Stmt? Body) : Stmt
 {
     public override void Accept(IStmtVisitor visitor) => visitor.VisitWhileStmt(this);
 }

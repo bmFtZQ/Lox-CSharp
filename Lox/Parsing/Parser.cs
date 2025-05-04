@@ -38,6 +38,7 @@ public class Parser(IEnumerable<Token> tokens)
         try
         {
             if (Match(TokenType.Var)) return VarDeclaration();
+            if (Match(TokenType.Class)) return ClassDeclaration();
             if (Match(TokenType.Fun))
             {
                 // Handle case of function expression appearing in expression
@@ -47,8 +48,10 @@ public class Parser(IEnumerable<Token> tokens)
                     _current--;
                     return ExpressionStatement();
                 }
+
                 return Function();
             }
+
             return Statement();
         }
         catch (ParseException)
@@ -72,6 +75,26 @@ public class Parser(IEnumerable<Token> tokens)
 
         Consume(TokenType.Semicolon, "Expected ';' after variable declaration.");
         return new VarStmt(name, initializer);
+    }
+
+    /// <summary>
+    /// Scan for class declaration statement.
+    /// </summary>
+    /// <returns>An AST populated with the parse class.</returns>
+    private ClassStmt ClassDeclaration()
+    {
+        var name = Consume(TokenType.Identifier, "Expected class name.");
+        Consume(TokenType.LeftBrace, "Expected '{' before class body.");
+
+        List<FunctionStmt> methods = [];
+        while (!Check(TokenType.RightBrace) && !IsAtEnd)
+        {
+            methods.Add(Function("method"));
+        }
+
+        Consume(TokenType.RightBrace, "Expected '}' after class body.");
+
+        return new ClassStmt(name, methods);
     }
 
     /// <summary>
@@ -124,7 +147,7 @@ public class Parser(IEnumerable<Token> tokens)
     /// Scan for statements, will cascade to lower level statements.
     /// </summary>
     /// <returns>An AST populate with the parsed statement.</returns>
-    private Stmt Statement()
+    private Stmt? Statement()
     {
         if (Match(TokenType.If))
         {
@@ -156,7 +179,9 @@ public class Parser(IEnumerable<Token> tokens)
             return PrintStatement();
         }
 
-        return ExpressionStatement();
+        return !Match(TokenType.Semicolon)
+            ? ExpressionStatement()
+            : null;
     }
 
     /// <summary>
@@ -337,6 +362,11 @@ public class Parser(IEnumerable<Token> tokens)
                 return new AssignExpr(name, value);
             }
 
+            if (expr is GetExpr getExpr)
+            {
+                return new SetExpr(getExpr.Object, getExpr.Name, value);
+            }
+
             Error(equals, "Invalid assignment target.");
         }
 
@@ -509,6 +539,11 @@ public class Parser(IEnumerable<Token> tokens)
             {
                 expr = FinishCall(expr);
             }
+            else if (Match(TokenType.Dot))
+            {
+                var name = Consume(TokenType.Identifier, "Expected property name after '.'.");
+                expr = new GetExpr(expr, name);
+            }
             else
             {
                 break;
@@ -540,6 +575,8 @@ public class Parser(IEnumerable<Token> tokens)
             Consume(TokenType.RightParenthesis, "Expected ')' after expression.");
             return new GroupingExpr(expr);
         }
+
+        if (Match(TokenType.This)) return new ThisExpr(Previous());
 
         if (Match(TokenType.Identifier))
         {
