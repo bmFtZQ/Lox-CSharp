@@ -386,9 +386,10 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// </summary>
     /// <param name="value">The value to convert to a string.</param>
     /// <returns>A string representing the specified value.</returns>
-    public static string Stringify(object? value) => value switch
+    public string Stringify(object? value) => value switch
     {
         bool b => b ? "true" : "false",
+        LoxInstance instance => instance.Class.FindMethod("toString")?.Bind(instance).Call(this, []) as string ?? instance.ToString(),
         not null => value.ToString(),
         _ => null
     } ?? "nil";

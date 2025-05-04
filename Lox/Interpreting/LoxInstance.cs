@@ -4,7 +4,8 @@ namespace Lox.Interpreting;
 
 public class LoxInstance(LoxClass cls)
 {
-    private readonly Dictionary<string, object?> _fields = [];
+    public LoxClass Class { get; } = cls;
+    public Dictionary<string, object?> Fields { get; } = [];
 
     /// <summary>
     /// Get a property value from this instance.
@@ -16,12 +17,12 @@ public class LoxInstance(LoxClass cls)
     /// </exception>
     public object? Get(Token name)
     {
-        if (_fields.TryGetValue(name.Lexeme, out var value))
+        if (Fields.TryGetValue(name.Lexeme, out var value))
         {
             return value;
         }
 
-        return cls.FindMethod(name.Lexeme)?.Bind(this) ??
+        return Class.FindMethod(name.Lexeme)?.Bind(this) ??
                throw new RunTimeException(name, $"Undefined property '{name.Lexeme}'.");
     }
 
@@ -32,8 +33,8 @@ public class LoxInstance(LoxClass cls)
     /// <param name="value">The value to set the property to.</param>
     public void Set(Token name, object? value)
     {
-        _fields[name.Lexeme] = value;
+        Fields[name.Lexeme] = value;
     }
 
-    public override string ToString() => $"<{cls.Name} instance>";
+    public override string ToString() => $"<{Class.Name} instance>";
 }

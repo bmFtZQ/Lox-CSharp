@@ -1,8 +1,16 @@
-class Egotist {
-  speak() {
-    print this;
-  }
+class Object
+{
+    init(a, b)
+    {
+        this.a = a;
+        this.b = b;
+    }
+
+    toString()
+    {
+        return "Object { " + this.a + ", " + this.b + " }";
+    }
 }
 
-var method = Egotist().speak;
-method();
+var obj = Object(10, 20);
+print obj;
