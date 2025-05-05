@@ -29,8 +29,7 @@ public class LoxInstance(LoxClass? cls = null)
             return value;
         }
 
-        return Class?.FindMethod(name)?.Bind(this) ??
-               throw new RunTimeException(token, $"Undefined property '{name}'.");
+        return GetMethod(name) ?? throw new RunTimeException(token, $"Undefined property '{name}'.");
     }
 
     /// <summary>
@@ -47,6 +46,13 @@ public class LoxInstance(LoxClass? cls = null)
     {
         Fields[name] = value;
     }
+
+    /// <summary>
+    /// Finds and binds the specified method for this class.
+    /// </summary>
+    /// <param name="name">The name of the method to bind.</param>
+    /// <returns>The bound method if exists, null otherwise.</returns>
+    public ILoxMethod? GetMethod(string name) => Class?.FindMethod(name)?.Bind(this);
 
     public override string ToString() => $"<{Class?.Name} instance>";
 }

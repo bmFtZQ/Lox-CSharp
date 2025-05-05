@@ -424,8 +424,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     public string Stringify(object? value) => value switch
     {
         bool b => b ? "true" : "false",
-        LoxInstance instance => instance.Class?.FindMethod("toString")?.Bind(instance).Call(this, []) as string ??
-                                instance.ToString(),
+        LoxInstance instance => instance.GetMethod("toString")?.Call(this, []) as string ?? instance.ToString(),
         not null => value.ToString(),
         _ => null
     } ?? "nil";
