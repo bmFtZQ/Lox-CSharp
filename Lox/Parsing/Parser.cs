@@ -97,7 +97,13 @@ public class Parser(IEnumerable<Token> tokens)
         {
             if (Match(TokenType.Class))
             {
-                staticMethods.Add(Function("static method"));
+                var func = Function("static method");
+                if (func.Parameters.Count > 0)
+                {
+                    Error(func.Name, "Static method init cannot have parameters.");
+                }
+
+                staticMethods.Add(func);
             }
             else
             {
@@ -117,7 +123,7 @@ public class Parser(IEnumerable<Token> tokens)
     /// <returns>An AST with the parsed function declaration.</returns>
     private FunctionStmt Function(string kind = "function")
     {
-        var name = Consume(TokenType.Identifier, "Expect {kind} name.");
+        var name = Consume(TokenType.Identifier, $"Expect {kind} name.");
 
         Consume(TokenType.LeftParenthesis, $"Expect '(' after {kind} name.");
 

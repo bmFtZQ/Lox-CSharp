@@ -1,0 +1,11 @@
+class Singleton {
+    class init() {
+        this.thing = "singleton object";
+    }
+
+    class toString() {
+        return this.thing;
+    }
+}
+
+print Singleton;

@@ -544,6 +544,8 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 
         _environment = enclosing;
         _environment.Assign(stmt.Name, cls);
+
+        cls.GetMethod("init")?.Call(this, []);
     }
 
     /// <summary>
