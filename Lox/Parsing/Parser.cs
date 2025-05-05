@@ -67,13 +67,13 @@ public class Parser(IEnumerable<Token> tokens)
     /// <returns>An AST with the parsed variable declaration.</returns>
     private VarStmt VarDeclaration()
     {
-        var name = Consume(TokenType.Identifier, "Expected variable name.");
+        var name = Consume(TokenType.Identifier, "Expect variable name.");
 
         var initializer = Match(TokenType.Equal)
             ? Expression()
             : null;
 
-        Consume(TokenType.Semicolon, "Expected ';' after variable declaration.");
+        Consume(TokenType.Semicolon, "Expect ';' after variable declaration.");
         return new VarStmt(name, initializer);
     }
 
@@ -83,13 +83,13 @@ public class Parser(IEnumerable<Token> tokens)
     /// <returns>An AST populated with the parse class.</returns>
     private ClassStmt ClassDeclaration()
     {
-        var name = Consume(TokenType.Identifier, "Expected class name.");
+        var name = Consume(TokenType.Identifier, "Expect class name.");
 
         var superclass = Match(TokenType.Less)
-            ? new VariableExpr(Consume(TokenType.Identifier, "Expected superclass name."))
+            ? new VariableExpr(Consume(TokenType.Identifier, "Expect superclass name."))
             : null;
 
-        Consume(TokenType.LeftBrace, "Expected '{' before class body.");
+        Consume(TokenType.LeftBrace, "Expect '{' before class body.");
 
         List<FunctionStmt> methods = [];
         List<FunctionStmt> staticMethods = [];
@@ -105,7 +105,7 @@ public class Parser(IEnumerable<Token> tokens)
             }
         }
 
-        Consume(TokenType.RightBrace, "Expected '}' after class body.");
+        Consume(TokenType.RightBrace, "Expect '}' after class body.");
 
         return new ClassStmt(name, superclass, methods, staticMethods);
     }
@@ -117,14 +117,14 @@ public class Parser(IEnumerable<Token> tokens)
     /// <returns>An AST with the parsed function declaration.</returns>
     private FunctionStmt Function(string kind = "function")
     {
-        var name = Consume(TokenType.Identifier, "Expected {kind} name.");
+        var name = Consume(TokenType.Identifier, "Expect {kind} name.");
 
         Consume(TokenType.LeftParenthesis, $"Expect '(' after {kind} name.");
 
         var parameters = FunctionParameters();
 
-        Consume(TokenType.RightParenthesis, $"Expected ')' after {kind} parameters.");
-        Consume(TokenType.LeftBrace, $"Expected '{{' before {kind} body.");
+        Consume(TokenType.RightParenthesis, $"Expect ')' after parameters.");
+        Consume(TokenType.LeftBrace, $"Expect '{{' before {kind} body.");
         var body = Block();
 
         return new FunctionStmt(name, parameters, body);
@@ -145,11 +145,11 @@ public class Parser(IEnumerable<Token> tokens)
             {
                 if (parameters.Count >= 255)
                 {
-                    Error(Peek(), "Can't have more than 255 parameters");
+                    Error(Peek(), "Can't have more than 255 parameters.");
                 }
 
                 parameters.Add(
-                    Consume(TokenType.Identifier, "Expected parameter name."));
+                    Consume(TokenType.Identifier, "Expect parameter name."));
             } while (Match(TokenType.Comma));
         }
 
@@ -162,35 +162,12 @@ public class Parser(IEnumerable<Token> tokens)
     /// <returns>An AST populate with the parsed statement.</returns>
     private Stmt? Statement()
     {
-        if (Match(TokenType.If))
-        {
-            return IfStatement();
-        }
-
-        if (Match(TokenType.LeftBrace))
-        {
-            return new BlockStmt(Block());
-        }
-
-        if (Match(TokenType.While))
-        {
-            return WhileStatement();
-        }
-
-        if (Match(TokenType.For))
-        {
-            return ForStatement();
-        }
-
-        if (Match(TokenType.Return))
-        {
-            return ReturnStatement();
-        }
-
-        if (Match(TokenType.Print))
-        {
-            return PrintStatement();
-        }
+        if (Match(TokenType.For)) return ForStatement();
+        if (Match(TokenType.If)) return IfStatement();
+        if (Match(TokenType.Print)) return PrintStatement();
+        if (Match(TokenType.Return)) return ReturnStatement();
+        if (Match(TokenType.While)) return WhileStatement();
+        if (Match(TokenType.LeftBrace)) return new BlockStmt(Block());
 
         return !Match(TokenType.Semicolon)
             ? ExpressionStatement()
@@ -204,7 +181,7 @@ public class Parser(IEnumerable<Token> tokens)
     private PrintStmt PrintStatement()
     {
         var value = Expression();
-        Consume(TokenType.Semicolon, "Expected ';' after value.");
+        Consume(TokenType.Semicolon, "Expect ';' after value.");
         return new PrintStmt(value);
     }
 
@@ -220,7 +197,7 @@ public class Parser(IEnumerable<Token> tokens)
             ? Expression()
             : null;
 
-        Consume(TokenType.Semicolon, "Expected ';' after return value.");
+        Consume(TokenType.Semicolon, "Expect ';' after return value.");
         return new ReturnStmt(keyword, value);
     }
 
@@ -231,7 +208,7 @@ public class Parser(IEnumerable<Token> tokens)
     private ExpressionStmt ExpressionStatement()
     {
         var value = Expression();
-        Consume(TokenType.Semicolon, "Expected ';' after value.");
+        Consume(TokenType.Semicolon, "Expect ';' after expression.");
         return new ExpressionStmt(value);
     }
 
@@ -248,7 +225,7 @@ public class Parser(IEnumerable<Token> tokens)
             statements.Add(Declaration());
         }
 
-        Consume(TokenType.RightBrace, "Expected '}' after block.");
+        Consume(TokenType.RightBrace, "Expect '}' after block.");
         return statements;
     }
 
@@ -258,9 +235,9 @@ public class Parser(IEnumerable<Token> tokens)
     /// <returns>An AST populate with the parsed if statement.</returns>
     private IfStmt IfStatement()
     {
-        Consume(TokenType.LeftParenthesis, "Expected '(' after 'if'.");
+        Consume(TokenType.LeftParenthesis, "Expect '(' after 'if'.");
         var condition = Expression();
-        Consume(TokenType.RightParenthesis, "Expected ')' after if condition.");
+        Consume(TokenType.RightParenthesis, "Expect ')' after if condition.");
 
         var thenBranch = Statement();
 
@@ -277,9 +254,9 @@ public class Parser(IEnumerable<Token> tokens)
     /// <returns>An AST populated with the parsed while statement.</returns>
     private WhileStmt WhileStatement()
     {
-        Consume(TokenType.LeftParenthesis, "Expected '(' after 'if'.");
+        Consume(TokenType.LeftParenthesis, "Expect '(' after 'if'.");
         var condition = Expression();
-        Consume(TokenType.RightParenthesis, "Expected ')' after if condition.");
+        Consume(TokenType.RightParenthesis, "Expect ')' after if condition.");
 
         var body = Statement();
 
@@ -294,7 +271,7 @@ public class Parser(IEnumerable<Token> tokens)
     /// </returns>
     private Stmt ForStatement()
     {
-        Consume(TokenType.LeftParenthesis, "Expected '(' after 'if'.");
+        Consume(TokenType.LeftParenthesis, "Expect '(' after 'for'.");
 
         Stmt? initializer;
         if (Match(TokenType.Semicolon))
@@ -314,25 +291,19 @@ public class Parser(IEnumerable<Token> tokens)
             ? Expression()
             : new LiteralExpr(true);
 
-        Consume(TokenType.Semicolon, "Expected ';' after for condition.");
+        Consume(TokenType.Semicolon, "Expect ';' after loop condition.");
 
         var increment = !Check(TokenType.RightParenthesis)
             ? Expression()
             : null;
 
-        Consume(TokenType.RightParenthesis, "Expected ')' after if condition.");
+        Consume(TokenType.RightParenthesis, "Expect ')' after for clauses.");
 
         var body = Statement();
 
         if (increment is not null)
         {
-            var incrementStmt = new ExpressionStmt(increment);
-
-            // Append increment expression to existing block or create new block
-            // for a single statement body.
-            body = body is BlockStmt block
-                ? new BlockStmt([..block.Statements, incrementStmt])
-                : new BlockStmt([body, incrementStmt]);
+            body = new BlockStmt([body, new ExpressionStmt(increment)]);
         }
 
         // Create while-loop that can 
@@ -523,12 +494,12 @@ public class Parser(IEnumerable<Token> tokens)
         if (Match(TokenType.Fun))
         {
             var keyword = Previous();
-            Consume(TokenType.LeftParenthesis, "Expect '(' after function name.");
+            Consume(TokenType.LeftParenthesis, "Expect '(' after 'fun'.");
 
             var parameters = FunctionParameters();
 
-            Consume(TokenType.RightParenthesis, "Expected ')' after function parameters.");
-            Consume(TokenType.LeftBrace, "Expected '{' before function body.");
+            Consume(TokenType.RightParenthesis, "Expect ')' after parameters.");
+            Consume(TokenType.LeftBrace, "Expect '{' before function body.");
             var body = Block();
 
             return new FunctionExpr(keyword, parameters, body);
@@ -554,7 +525,7 @@ public class Parser(IEnumerable<Token> tokens)
             }
             else if (Match(TokenType.Dot))
             {
-                var name = Consume(TokenType.Identifier, "Expected property name after '.'.");
+                var name = Consume(TokenType.Identifier, "Expect property name after '.'.");
                 expr = new GetExpr(expr, name);
             }
             else
@@ -585,7 +556,7 @@ public class Parser(IEnumerable<Token> tokens)
         if (Match(TokenType.LeftParenthesis))
         {
             var expr = Expression();
-            Consume(TokenType.RightParenthesis, "Expected ')' after expression.");
+            Consume(TokenType.RightParenthesis, "Expect ')' after expression.");
             return new GroupingExpr(expr);
         }
 
@@ -593,8 +564,8 @@ public class Parser(IEnumerable<Token> tokens)
         if (Match(TokenType.Super))
         {
             var keyword = Previous();
-            Consume(TokenType.Dot, "Expected '.' after 'super'.");
-            var method = Consume(TokenType.Identifier, "Expected superclass method name.");
+            Consume(TokenType.Dot, "Expect '.' after 'super'.");
+            var method = Consume(TokenType.Identifier, "Expect superclass method name.");
             return new SuperExpr(keyword, method);
         }
 
@@ -603,7 +574,7 @@ public class Parser(IEnumerable<Token> tokens)
             return new VariableExpr(Previous());
         }
 
-        throw Error(Peek(), "Expected an expression.");
+        throw Error(Peek(), "Expect expression.");
     }
 
     /// <summary>
@@ -627,7 +598,7 @@ public class Parser(IEnumerable<Token> tokens)
             } while (Match(TokenType.Comma));
         }
 
-        var paren = Consume(TokenType.RightParenthesis, "Expected ')' after arguments.");
+        var paren = Consume(TokenType.RightParenthesis, "Expect ')' after arguments.");
 
         return new CallExpr(callee, paren, arguments);
     }

@@ -54,5 +54,5 @@ public class LoxInstance(LoxClass? cls = null)
     /// <returns>The bound method if exists, null otherwise.</returns>
     public ILoxMethod? GetMethod(string name) => Class?.FindMethod(name)?.Bind(this);
 
-    public override string ToString() => $"<{Class?.Name} instance>";
+    public override string ToString() => $"{Class?.Name} instance";
 }

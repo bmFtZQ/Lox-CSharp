@@ -260,11 +260,16 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     /// <exception cref="RunTimeException">
     /// Thrown if attempt to get field on non-instance data.
     /// </exception>
-    public object VisitGetExpr(GetExpr expr)
+    public object? VisitGetExpr(GetExpr expr)
     {
         var obj = Evaluate(expr.Object);
-        return (obj as LoxInstance)?.Get(expr.Name)
-               ?? throw new RunTimeException(expr.Name, "Only instances have properties.");
+
+        if (obj is LoxInstance instance)
+        {
+            return instance.Get(expr.Name);
+        }
+
+        throw new RunTimeException(expr.Name, "Only instances have properties.");
     }
 
     /// <summary>
@@ -316,7 +321,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 
         if (method is null)
         {
-            throw new RunTimeException(expr.Method, $"Undefined property {expr.Method.Lexeme}.");
+            throw new RunTimeException(expr.Method, $"Undefined property '{expr.Method.Lexeme}'.");
         }
 
         return method.Bind(obj!);
@@ -497,7 +502,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     {
         var superclass = stmt.SuperClass is not null
             ? Evaluate(stmt.SuperClass) as LoxClass
-              ?? throw new RunTimeException(stmt.SuperClass?.Name, "Super class must be a class.")
+              ?? throw new RunTimeException(stmt.SuperClass?.Name, "Superclass must be a class.")
             : null;
 
         _environment.Define(stmt.Name.Lexeme);

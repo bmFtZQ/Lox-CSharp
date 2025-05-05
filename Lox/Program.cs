@@ -73,12 +73,16 @@ internal static class Program
     internal static void Error(int line, string message) =>
         Report(line, "", message);
 
-    internal static void Error(Token token, string message) =>
-        Report(token.Line, token.Type != TokenType.Eof ? " at end" : $" at '{token.Lexeme}'", message);
+    internal static void Error(Token token, string message)
+    {
+        Report(token.Line, token.Type == TokenType.Eof
+            ? " at end"
+            : $" at '{token.Lexeme}'", message);
+    }
 
     internal static void RunTimeError(RunTimeException exception)
     {
-        Console.Error.WriteLine($"[line {exception.Token?.Line}] {exception.Message}");
+        Console.Error.WriteLine($"{exception.Message}\n[line {exception.Token?.Line}]");
         HadRuntimeError = true;
     }
 

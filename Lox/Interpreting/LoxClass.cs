@@ -48,5 +48,5 @@ public class LoxClass : LoxInstance, ILoxCallable
         return Methods.GetValueOrDefault(name) ?? SuperClass?.FindMethod(name);
     }
 
-    public override string ToString() => $"<class {Name}>";
+    public override string ToString() => $"{Name}";
 }

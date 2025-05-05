@@ -72,6 +72,12 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
         if (_scopes.Count == 0) return;
 
         var scope = _scopes[^1];
+
+        if (scope.ContainsKey(name.Lexeme))
+        {
+            Program.Error(name, "Already a variable with this name in this scope.");
+        }
+
         scope[name.Lexeme] = false;
     }
 
@@ -87,6 +93,7 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
             if (_scopes[i].ContainsKey(name.Lexeme))
             {
                 interpreter.Resolve(expr, _scopes.Count - 1 - i);
+                return;
             }
         }
     }
