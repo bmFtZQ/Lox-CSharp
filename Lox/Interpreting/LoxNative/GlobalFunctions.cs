@@ -5,26 +5,26 @@ public static class GlobalFunctions
     public static IEnumerable<(string, ILoxCallable)> MakeFunctions(Interpreter interpreter) =>
     [
         // Get the current time in milliseconds.
-        ("clock", new NativeFunction(() => DateTimeOffset.Now.ToUnixTimeMilliseconds() / 1000.0)),
+        ("clock", new NativeFunction(_ => DateTimeOffset.Now.ToUnixTimeMilliseconds() / 1000.0)),
 
         // Convert value into a string.
-        ("string", new NativeFunction(interpreter.Stringify)),
+        ("string", new NativeFunction(p => interpreter.Stringify(p[0]), 1)),
 
         // Convert value into a number, returns nil if not possible.
-        ("number", new NativeFunction(double? (object? value) =>
+        ("number", new NativeFunction(p =>
         {
             try
             {
-                return Convert.ToDouble(value);
+                return Convert.ToDouble(p[0]);
             }
             catch
             {
                 return null;
             }
-        })),
+        }, 1)),
 
         // Get the type code of a value.
-        ("typeOf", new NativeFunction(string (object? value) => value switch
+        ("typeOf", new NativeFunction(p => p[0] switch
         {
             null => "nil",
             bool => "boolean",
@@ -34,12 +34,17 @@ public static class GlobalFunctions
             LoxInstance => "instance",
             LoxFunction => "function",
             _ => "???"
-        })),
+        }, 1)),
 
         // Test that a value is of a certain type, either by passing a class to
         // test by, or a type code string.
-        ("is", new NativeFunction(bool (object? value, object? type) =>
+        ("is", new NativeFunction(p =>
         {
+            if (p is not [var value, var type])
+            {
+                throw new ArgumentException(null);
+            }
+
             switch (value)
             {
                 case null when type is "nil":
@@ -66,6 +71,6 @@ public static class GlobalFunctions
             }
 
             return false;
-        }))
+        }, 2))
     ];
 }

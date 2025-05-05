@@ -8,15 +8,23 @@ public static class LoxConsole
         {
             {
                 "readLine",
-                new NativeMethod((LoxClass t) => Console.ReadLine())
+                new NativeMethod((_, _) => Console.ReadLine())
             },
             {
                 "writeLine",
-                new NativeMethod((LoxClass t, object? obj) => Console.WriteLine(interpreter.Stringify(obj)))
+                new NativeMethod((_, p) =>
+                {
+                    Console.WriteLine(interpreter.Stringify(p[0]));
+                    return null;
+                }, 1)
             },
             {
                 "write",
-                new NativeMethod((LoxClass t, object? obj) => Console.Write(interpreter.Stringify(obj)))
+                new NativeMethod((_, p) =>
+                {
+                    Console.Write(interpreter.Stringify(p[0]));
+                    return null;
+                }, 1)
             }
         });
     }

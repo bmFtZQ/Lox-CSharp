@@ -1,21 +1,16 @@
-using System.Reflection;
-using System.Runtime.ExceptionServices;
-
 namespace Lox.Interpreting.LoxNative;
 
-public class NativeFunction(Delegate function) : ILoxCallable
+public class NativeFunction(
+    Func<IReadOnlyList<object?>, object?> function,
+    int arity = 0) : ILoxCallable
 {
-    public int Arity { get; } = function.Method.GetParameters().Length;
+    public int Arity { get; } = arity;
 
     public object? Call(Interpreter interpreter, IReadOnlyList<object?> arguments)
     {
         try
         {
-            return function.DynamicInvoke([..arguments]);
-        }
-        catch (TargetInvocationException exception)
-        {
-            throw exception.InnerException!;
+            return function(arguments);
         }
         catch (ArgumentException)
         {

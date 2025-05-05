@@ -19,8 +19,7 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
         None,
         Function,
         Initializer,
-        Method,
-        StaticMethod
+        Method
     }
 
     private enum ClassType

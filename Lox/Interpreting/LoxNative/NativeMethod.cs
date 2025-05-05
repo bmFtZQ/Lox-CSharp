@@ -1,19 +1,22 @@
 namespace Lox.Interpreting.LoxNative;
 
-public class NativeMethod(Delegate function, LoxInstance? self = null) : ILoxMethod
+public class NativeMethod(
+    Func<LoxInstance, IReadOnlyList<object?>, object?> function,
+    int arity = 0,
+    LoxInstance? self = null) : ILoxMethod
 {
-    public int Arity { get; } = function.Method.GetParameters().Length - 1;
+    public int Arity { get; } = arity;
 
     public object? Call(Interpreter interpreter, IReadOnlyList<object?> arguments)
     {
         if (self is null)
         {
-            throw new RunTimeException(null, "Attempt to call native method as function.");
+            throw new RunTimeException(null, "Native method has no 'instance'.");
         }
 
         try
         {
-            return function.DynamicInvoke([self, ..arguments]);
+            return function(self, arguments);
         }
         catch (ArgumentException)
         {
@@ -23,7 +26,7 @@ public class NativeMethod(Delegate function, LoxInstance? self = null) : ILoxMet
 
     public ILoxMethod Bind(LoxInstance instance)
     {
-        return new NativeMethod(function, instance);
+        return new NativeMethod(function, Arity, instance);
     }
 
     public override string ToString() => "<native fn>";
