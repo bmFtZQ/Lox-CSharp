@@ -1,4 +1,4 @@
-using Lox.Interpreting.LoxNative;
+using Lox.Interpreting.Builtins;
 using Lox.Parsing;
 using Lox.Tokens;
 
@@ -26,10 +26,12 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 
     public Interpreter()
     {
-        Globals.Define("Array", LoxArray.MakeClass(this));
-        Globals.Define("Console", LoxConsole.MakeClass(this));
+        Globals.Define("Array", new LoxArray(this).Class);
+        Globals.Define("Console", new LoxConsole(this).Class);
+        Globals.Define("String", new LoxString(this).Class);
+        Globals.Define("Math", new LoxMath(this).Class);
 
-        foreach (var (name, function) in GlobalFunctions.MakeFunctions(this))
+        foreach (var (name, function) in new LoxGlobalFunctions(this).Functions)
         {
             Globals.Define(name, function);
         }

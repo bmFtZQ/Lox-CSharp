@@ -1,4 +1,4 @@
-namespace Lox.Interpreting.LoxNative;
+namespace Lox.Interpreting.Builtins;
 
 public class NativeFunction(
     Func<IReadOnlyList<object?>, object?> function,

@@ -40,6 +40,21 @@ public class Environment(Environment? enclosing = null)
         throw new RunTimeException(name, $"Undefined variable '{name.Lexeme}'.");
     }
 
+    public object? Get(string name, Token? token = null)
+    {
+        if (_values.TryGetValue(name, out var value))
+        {
+            return value;
+        }
+
+        if (_enclosing is not null)
+        {
+            return _enclosing.Get(name);
+        }
+
+        throw new RunTimeException(token, $"Undefined variable '{name}'.");
+    }
+
     /// <summary>
     /// Get an existing variable from specified environment.
     /// </summary>

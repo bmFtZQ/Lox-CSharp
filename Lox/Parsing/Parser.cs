@@ -98,7 +98,7 @@ public class Parser(IEnumerable<Token> tokens)
             if (Match(TokenType.Class))
             {
                 var func = Function("static method");
-                if (func.Parameters.Count > 0)
+                if (func.Parameters.Count > 0 && func.Name.Lexeme == "init")
                 {
                     Error(func.Name, "Static method init cannot have parameters.");
                 }

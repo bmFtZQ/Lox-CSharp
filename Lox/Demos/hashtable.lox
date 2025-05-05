@@ -1,0 +1,148 @@
+class KeyValue {
+    init(key, value) {
+        this.key = key;
+        this.value = value;
+    }
+}
+
+class HashTable {
+    init(capacity) {
+        this.buckets = Array(capacity);
+        this.entries = 0;
+    }
+
+    resize(capacity) {
+        if (capacity < this.entries) capacity = this.entries;
+        var old = this.buckets;
+        this.buckets = Array(capacity);
+
+        old.foreach(fun (e) { if (e) this.set(e.key, e.value); });
+    }
+
+    get(key) {
+        var bucketNo = this.getBucket(key);
+
+        if (is(bucketNo, "number")) {
+            var bucket = this.buckets.get(bucketNo);
+
+            if (bucket) {
+                return bucket.value;
+            }
+        }
+
+        return nil;
+    }
+
+    set(key, value) {
+        var bucketNo = this.getBucket(key);
+
+        if (is(bucketNo, "number")) {
+            if (!this.buckets.get(bucketNo)) this.entries = this.entries + 1;
+            this.buckets.set(bucketNo, KeyValue(key, value));
+            return true;
+        }
+
+        return false;
+    }
+
+    delete(key) {
+        var bucket = this.getBucket(key);
+
+        if (this.buckets.get(bucket)) {
+            this.buckets.set(bucket, nil);
+            this.entries = this.entries - 1;
+            return true;
+        }
+
+        return false;
+    }
+
+    has(key) {
+        var bucketNo = this.getBucket(key);
+
+        if (is(bucketNo, "number")) {
+            var bucket = this.buckets.get(bucketNo);
+
+            if (is(bucket, KeyValue)) {
+                return bucket.key == key;
+            }
+        }
+
+        return false;
+    }
+
+    foreach(function) {
+        if (!is(function, "function")) return nil;
+
+        for (var i = 0; i < this.buckets.length(); i = i + 1) {
+            var bucket = this.buckets.get(i);
+
+            if (bucket) {
+                function(bucket.key, bucket.value);
+            }
+        }
+    }
+
+    getBucket(key) {
+        var hash = HashTable.hash(key);
+        var bucket = Math.mod(hash, this.buckets.length());
+        var start = bucket;
+        var wrapped = false;
+
+        while (true) {
+            if (bucket >= this.buckets.length()) {
+                bucket = bucket - this.buckets.length();
+                wrapped = true;
+            }
+
+            if (wrapped and bucket == start) {
+                this.resize(this.buckets.length() * 2);
+            }
+
+            if (this.buckets.get(bucket) == nil) {
+                return bucket;
+            }
+
+            if (this.buckets.get(bucket).key == key) {
+                return bucket;
+            }
+
+            bucket = bucket + 1;
+        }
+    }
+
+    class hash(key) {
+        var hash = 0;
+
+        if (is(key, "string")) {
+            hash = this.stringHash(key);
+        }
+
+        if (is(key, "number")) {
+            hash = key;
+        }
+
+        if (is(key, "boolean")) {
+            if (key) hash = 1;
+        }
+
+        return hash;
+    }
+
+    class stringHash(str) {
+        var hash = 5381;
+        for (var i = 0; i < String.length(str); i = i + 1) {
+            hash = (hash * 32) + hash + String.charCodeAt(str, i);
+        }
+        return hash;
+    }
+}
+
+var ht = HashTable(5);
+
+ht.set("Hello", 5);
+ht.set("world", "asdf");
+
+ht.foreach(fun (k, v) {
+    print "key: " + k + ", value: " + v;
+});
