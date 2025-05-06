@@ -7,12 +7,16 @@ A C# implementation of the tree-walker lox interpreter from
 
 ## Differences from JLox:
 
+* There are augmented assignment operators for the following `+ - * /`. So
+  `i += 1` will be converted to `i = i + 1`.
 * `+` operator will convert values to strings if at least one string is present.
   For example `"str" + 5` will return `"str5"`.
-* Functions can be created in expressions using `fun ([params]) {[body]}`:
+* Functions can be created in expressions using `fun (<params>) {<body>}`:
   ```
   var function = fun (a, b) { return a + b; };
   ```
+* Indexer syntax for getting/setting instance fields dynamically, for example:
+  `instance["a"]` would get the field `a` on object `instance`.
 * Classes have static methods and fields, with static methods declared using
   `class` keyword:
   ```
@@ -36,6 +40,23 @@ A C# implementation of the tree-walker lox interpreter from
 
   B.method(); // prints "class A"
   ```
+
+### Arrays
+
+This version of Lox also supports arrays. They can be created using the `Array`
+global class or using an array expression `[...]` with a comma separated list of
+values.
+
+Array values can be assigned or get using the indexer syntax `array[index]`.
+Though the index value must be a number, string indexes will get a field.
+
+```
+var arr = [1, 2, 3];
+
+for (var i = 0; i < arr.length(); i += 1) {
+  print arr[i];
+}
+```
 
 ### Built-ins
 
@@ -62,7 +83,6 @@ A C# implementation of the tree-walker lox interpreter from
 * Math
   * `class mod(a, b)` - Get modulo of two numbers.
   * `class round(v, d)` - Round number `v` to `d` decimal places.
-
 
 #### Functions
 
