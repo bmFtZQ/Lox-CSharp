@@ -2,9 +2,9 @@ using Lox.Tokens;
 
 namespace Lox.Interpreting;
 
-public class LoxArrayInstance(LoxClass cls) : LoxInstance(cls)
+public class LoxArrayInstance(LoxClass cls, IEnumerable<object?>? elements = null) : LoxInstance(cls)
 {
-    public List<object?> Array { get; set; } = [];
+    public List<object?> Array { get; set; } = [..elements ?? []];
 
     public object? Get(double index, Token? token = null)
     {

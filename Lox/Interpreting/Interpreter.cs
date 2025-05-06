@@ -268,7 +268,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 
         if (obj is LoxInstance instance)
         {
-            return Evaluate(expr.Name) switch
+            return Evaluate(expr.Index) switch
             {
                 double d when instance is LoxArrayInstance array => array.Get(d),
                 string s => instance.Get(s, expr.Token),
@@ -299,7 +299,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 
         var value = Evaluate(expr.Value);
 
-        switch (Evaluate(expr.Name))
+        switch (Evaluate(expr.Index))
         {
             case double d when instance is LoxArrayInstance array:
                 array.Set(d, value);
@@ -360,6 +360,14 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
     public object VisitFunctionExpr(FunctionExpr expr)
     {
         return new LoxFunction(expr.Parameters, expr.Body, _environment);
+    }
+
+    public object VisitArrayExpr(ArrayExpr expr)
+    {
+        var cls = Globals.Get("Array") as LoxClass
+                  ?? throw new RunTimeException(expr.Start, "Unable to find array class in globals.");
+        var elements = expr.Elements.Select(Evaluate).ToList();
+        return new LoxArrayInstance(cls, elements);
     }
 
     /// <summary>

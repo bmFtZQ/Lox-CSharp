@@ -23,7 +23,7 @@ class HashTable {
         var bucketNo = this.getBucket(key);
 
         if (is(bucketNo, "number")) {
-            var bucket = this.buckets.get(bucketNo);
+            var bucket = this.buckets[bucketNo];
 
             if (bucket) {
                 return bucket.value;
@@ -37,8 +37,8 @@ class HashTable {
         var bucketNo = this.getBucket(key);
 
         if (is(bucketNo, "number")) {
-            if (!this.buckets.get(bucketNo)) this.entries = this.entries + 1;
-            this.buckets.set(bucketNo, KeyValue(key, value));
+            if (!this.buckets[bucketNo]) this.entries = this.entries + 1;
+            this.buckets[bucketNo] = KeyValue(key, value);
             return true;
         }
 
@@ -48,8 +48,8 @@ class HashTable {
     delete(key) {
         var bucket = this.getBucket(key);
 
-        if (this.buckets.get(bucket)) {
-            this.buckets.set(bucket, nil);
+        if (this.buckets[bucket]) {
+            this.buckets[bucket] = nil;
             this.entries = this.entries - 1;
             return true;
         }
@@ -61,7 +61,7 @@ class HashTable {
         var bucketNo = this.getBucket(key);
 
         if (is(bucketNo, "number")) {
-            var bucket = this.buckets.get(bucketNo);
+            var bucket = this.buckets[bucketNo];
 
             if (is(bucket, KeyValue)) {
                 return bucket.key == key;
@@ -75,7 +75,7 @@ class HashTable {
         if (!is(function, "function")) return nil;
 
         for (var i = 0; i < this.buckets.length(); i = i + 1) {
-            var bucket = this.buckets.get(i);
+            var bucket = this.buckets[i];
 
             if (bucket) {
                 function(bucket.key, bucket.value);
@@ -99,11 +99,11 @@ class HashTable {
                 this.resize(this.buckets.length() * 2);
             }
 
-            if (this.buckets.get(bucket) == nil) {
+            if (this.buckets[bucket] == nil) {
                 return bucket;
             }
 
-            if (this.buckets.get(bucket).key == key) {
+            if (this.buckets[bucket].key == key) {
                 return bucket;
             }
 

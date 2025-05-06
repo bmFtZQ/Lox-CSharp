@@ -330,7 +330,7 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
     public object? VisitGetExpr(GetExpr expr)
     {
         Resolve(expr.Object);
-        Resolve(expr.Name);
+        Resolve(expr.Index);
         return null;
     }
 
@@ -338,7 +338,7 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
     {
         Resolve(expr.Value);
         Resolve(expr.Object);
-        Resolve(expr.Name);
+        Resolve(expr.Index);
         return null;
     }
 
@@ -372,6 +372,16 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
     public object? VisitFunctionExpr(FunctionExpr expr)
     {
         ResolveFunction(expr, FunctionType.Function);
+        return null;
+    }
+
+    public object? VisitArrayExpr(ArrayExpr expr)
+    {
+        foreach (var element in expr.Elements)
+        {
+            Resolve(element);
+        }
+
         return null;
     }
 }

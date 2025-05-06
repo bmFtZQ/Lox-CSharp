@@ -1,13 +1,12 @@
-class A {}
-
-var a = Array(10);
-
-for (var i = 0; i < a.length(); i = i + 1) {
-    a[i] = 10 - i;
+class Obj {
+    method() {
+    }
 }
 
-for (var i = 0; i < a.length(); i = i + 1) {
-    print a[i];
-}
+var a = 3;
+var arr = [a, 32, nil, "string", Array(5), Obj, fun(){}, Obj().method];
 
-print a;
+print arr;
+
+arr.fill(1);
+print arr;

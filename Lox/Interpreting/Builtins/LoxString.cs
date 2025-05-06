@@ -12,7 +12,7 @@ public class LoxString
         {
             { "length", new NativeMethod(Length, 1) },
             { "charAt", new NativeMethod(CharAt, 2) },
-            { "charCodeAt", new NativeMethod(CharCodeAt, 3) }
+            { "charCodeAt", new NativeMethod(CharCodeAt, 2) }
         });
     }
 

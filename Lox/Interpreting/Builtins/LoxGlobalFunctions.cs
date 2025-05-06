@@ -15,7 +15,8 @@ public class LoxGlobalFunctions
             ("number", new NativeFunction(Number, 1)),
             ("typeOf", new NativeFunction(TypeOf, 1)),
             ("is", new NativeFunction(Is, 2)),
-            ("fields", new NativeFunction(Fields, 1))
+            ("fields", new NativeFunction(Fields, 1)),
+            ("methods", new NativeFunction(Methods, 1))
         ];
     }
 
@@ -118,9 +119,21 @@ public class LoxGlobalFunctions
             throw new RunTimeException(null, "Array is not defined in global scope.");
         }
 
-        var fields = instance.Fields
-            .Select(kv => new LoxInstance(arrayClass) { Data = (object?[]) [kv.Key, kv.Value] });
+        return new LoxArrayInstance(arrayClass, [..instance.Fields.Select(kv => kv.Key)]);
+    }
 
-        return new LoxInstance(arrayClass) { Data = fields };
+    private object Methods(IReadOnlyList<object?> args)
+    {
+        if (args is not [LoxInstance instance])
+        {
+            throw new ArgumentException("Invalid argument types.", nameof(args));
+        }
+
+        if (_interpreter.Globals.Get("Array") is not LoxClass arrayClass)
+        {
+            throw new RunTimeException(null, "Array is not defined in global scope.");
+        }
+
+        return new LoxArrayInstance(arrayClass, [..instance.Class?.Methods.Select(kv => kv.Key) ?? []]);
     }
 }

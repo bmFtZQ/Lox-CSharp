@@ -8,11 +8,6 @@ public class LoxInstance(LoxClass? cls = null)
     public Dictionary<string, object?> Fields { get; } = [];
 
     /// <summary>
-    /// Arbitrary data inaccessible to Lox, can be used to store native data.
-    /// </summary>
-    public object? Data { get; set; }
-
-    /// <summary>
     /// Get a property value from this instance.
     /// </summary>
     /// <param name="name">The name of the property to get.</param>

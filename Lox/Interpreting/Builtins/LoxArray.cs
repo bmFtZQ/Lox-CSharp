@@ -12,6 +12,7 @@ public class LoxArray
         {
             { "init", new NativeMethod(Init, 1) },
             { "length", new NativeMethod(Length) },
+            { "fill", new NativeMethod(Fill, 1) },
             { "foreach", new NativeMethod(ForEach, 1) },
             { "toString", new NativeMethod(Method_ToString) }
         }, makeInstance: c => new LoxArrayInstance(c));
@@ -47,6 +48,22 @@ public class LoxArray
         return (double)arr.Array.Count;
     }
 
+    private static object Fill(LoxInstance self, IReadOnlyList<object?> args)
+    {
+        ThrowIfNotInstance(self, out var arr);
+        if (args is not [var value])
+        {
+            throw new ArgumentException("Invalid argument types.", nameof(args));
+        }
+
+        for (var i = 0; i < arr.Array.Count; i++)
+        {
+            arr.Array[i] = value;
+        }
+
+        return arr;
+    }
+
     private object? ForEach(LoxInstance self, IReadOnlyList<object?> args)
     {
         ThrowIfNotInstance(self, out var arr);
@@ -57,7 +74,7 @@ public class LoxArray
 
         foreach (var (obj, i) in arr.Array.Select((x, i) => (x, i)))
         {
-            function.Call(_interpreter, [obj, (double)i]);
+            function.Call(_interpreter, [obj, (double)i, arr]);
         }
 
         return null;
