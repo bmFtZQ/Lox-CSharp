@@ -1,0 +1,11 @@
+Console.write("Enter number A: ");
+var numA = number(Console.readLine());
+
+Console.write("Enter number B: ");
+var numB = number(Console.readLine());
+
+var status = if (numA == numB) " is equal to "
+             else if (numA > numB) " is greater than "
+             else " is less than ";
+
+print numA + status + numB;

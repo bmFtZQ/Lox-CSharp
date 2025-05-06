@@ -384,4 +384,12 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
 
         return null;
     }
+
+    public object? VisitIfExpr(IfExpr expr)
+    {
+        Resolve(expr.Condition);
+        Resolve(expr.Then);
+        Resolve(expr.Else);
+        return null;
+    }
 }

@@ -18,6 +18,7 @@ public interface IExprVisitor<out T>
     T VisitSuperExpr(SuperExpr expr);
     T VisitFunctionExpr(FunctionExpr expr);
     T VisitArrayExpr(ArrayExpr expr);
+    T VisitIfExpr(IfExpr expr);
 }
 
 public abstract record Expr
@@ -93,4 +94,9 @@ public record FunctionExpr(Token Keyword, IReadOnlyList<Token> Parameters, IRead
 public record ArrayExpr(Expr[] Elements, Token Start) : Expr
 {
     public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitArrayExpr(this);
+}
+
+public record IfExpr(Token Keyword, Expr Condition, Expr Then, Expr Else) : Expr
+{
+    public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitIfExpr(this);
 }

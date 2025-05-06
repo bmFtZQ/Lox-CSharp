@@ -15,6 +15,12 @@ A C# implementation of the tree-walker lox interpreter from
   ```
   var function = fun (a, b) { return a + b; };
   ```
+* If expressions can be used to conditionally select value from an expression:
+  ```
+  var numA = 10;
+  var numB = 5;
+  print if (numA == numB) "equal" else "not equal";
+  ```
 * Indexer syntax for getting/setting instance fields dynamically, for example:
   `instance["a"]` would get the field `a` on object `instance`.
 * Classes have static methods and fields, with static methods declared using
@@ -69,8 +75,6 @@ for (var i = 0; i < arr.length(); i += 1) {
 * Array
   * `Array(size)` - Make a new array with `size` length, elements
     initialized to `nil`.
-  * `get(i)` - Get a single value from array at index `i`.
-  * `set(i, v)` - Set a single value `v` at index `i`.
   * `length()` - Get the length of the array.
   * `fill(v)` - Fill array in place with value `v`, returns the array.
   * `foreach(function)` - Supply a function that will be run against every

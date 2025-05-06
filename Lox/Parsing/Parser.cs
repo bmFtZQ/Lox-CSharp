@@ -530,6 +530,23 @@ public class Parser(IEnumerable<Token> tokens)
             return new FunctionExpr(keyword, parameters, body);
         }
 
+        return IfExpression();
+    }
+
+    private Expr IfExpression()
+    {
+        if (Match(TokenType.If))
+        {
+            var token = Previous();
+            Consume(TokenType.LeftParenthesis, "Expect '(' after 'if'.");
+            var condition = Expression();
+            Consume(TokenType.RightParenthesis, "Expect ')' after if condition.");
+            var thenExpr = Expression();
+            Consume(TokenType.Else, "Expect 'else' after expression.");
+            var elseExpr = Expression();
+            return new IfExpr(token, condition, thenExpr, elseExpr);
+        }
+
         return Call();
     }
 

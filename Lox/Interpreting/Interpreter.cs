@@ -370,6 +370,13 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
         return new LoxArrayInstance(cls, elements);
     }
 
+    public object? VisitIfExpr(IfExpr expr)
+    {
+        return IsTruthy(Evaluate(expr.Condition))
+            ? Evaluate(expr.Then)
+            : Evaluate(expr.Else);
+    }
+
     /// <summary>
     /// Look up a variable and retrieve its value.
     /// </summary>
