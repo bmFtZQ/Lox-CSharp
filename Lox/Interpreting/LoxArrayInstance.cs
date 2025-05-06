@@ -12,7 +12,7 @@ public class LoxArrayInstance(LoxClass cls, IEnumerable<object?>? elements = nul
         {
             return Array[(int)index];
         }
-        catch (IndexOutOfRangeException)
+        catch (ArgumentOutOfRangeException)
         {
             throw new RunTimeException(token, "Array index out of bounds.");
         }
@@ -24,9 +24,9 @@ public class LoxArrayInstance(LoxClass cls, IEnumerable<object?>? elements = nul
         {
             Array[(int)index] = value;
         }
-        catch (IndexOutOfRangeException)
+        catch (ArgumentOutOfRangeException)
         {
-            throw new RunTimeException(token, "Array index out of bounds.");
+            throw new RunTimeException(token, "Array index out of bounds2.");
         }
     }
 }

@@ -4,7 +4,7 @@ var count = number(response) or 5;
 
 var array = Array(count);
 
-for (var i = 0; i < array.length(); i = i + 1) {
+for (var i = 0; i < array.length(); i += 1) {
     array[i] = i * i;
 }
 

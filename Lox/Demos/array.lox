@@ -1,12 +1,7 @@
-class Obj {
-    method() {
-    }
+var arr = [1, 2, 3, 4, 5];
+
+for (var i = 0; i < arr.length(); i += 1) {
+    arr[i] *= i + 1;
 }
 
-var a = 3;
-var arr = [a, 32, nil, "string", Array(5), Obj, fun(){}, Obj().method];
-
-print arr;
-
-arr.fill(1);
 print arr;

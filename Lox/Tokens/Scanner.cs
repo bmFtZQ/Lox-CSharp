@@ -69,12 +69,12 @@ public class Scanner(string source)
             case ']': AddToken(TokenType.RightBracket); break;
             case ',': AddToken(TokenType.Comma); break;
             case '.': AddToken(TokenType.Dot); break;
-            case '-': AddToken(TokenType.Minus); break;
-            case '+': AddToken(TokenType.Plus); break;
             case ';': AddToken(TokenType.Semicolon); break;
-            case '*': AddToken(TokenType.Star); break;
 
             // Ambiguous dual-char tokens.
+            case '-': AddToken(MatchNext('=') ? TokenType.MinusEqual : TokenType.Minus); break;
+            case '+': AddToken(MatchNext('=') ? TokenType.PlusEqual : TokenType.Plus); break;
+            case '*': AddToken(MatchNext('=') ? TokenType.StarEqual : TokenType.Star); break;
             case '!': AddToken(MatchNext('=') ? TokenType.BangEqual : TokenType.Bang); break;
             case '=': AddToken(MatchNext('=') ? TokenType.EqualEqual : TokenType.Equal); break;
             case '<': AddToken(MatchNext('=') ? TokenType.LessEqual : TokenType.Less); break;
@@ -86,7 +86,7 @@ public class Scanner(string source)
                 {
                     while (Peek() != '\n' && !IsAtEnd) Advance();
                 }
-                else AddToken(TokenType.Slash);
+                else AddToken(MatchNext('=') ? TokenType.SlashEqual : TokenType.Slash);
 
                 break;
 

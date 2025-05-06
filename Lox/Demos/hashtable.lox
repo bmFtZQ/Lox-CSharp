@@ -74,7 +74,7 @@ class HashTable {
     foreach(function) {
         if (!is(function, "function")) return nil;
 
-        for (var i = 0; i < this.buckets.length(); i = i + 1) {
+        for (var i = 0; i < this.buckets.length(); i += 1) {
             var bucket = this.buckets[i];
 
             if (bucket) {
@@ -131,7 +131,7 @@ class HashTable {
 
     class stringHash(str) {
         var hash = 5381;
-        for (var i = 0; i < String.length(str); i = i + 1) {
+        for (var i = 0; i < String.length(str); i += 1) {
             hash = (hash * 32) + hash + String.charCodeAt(str, i);
         }
         return hash;

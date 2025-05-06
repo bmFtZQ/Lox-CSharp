@@ -16,7 +16,9 @@ public class LoxGlobalFunctions
             ("typeOf", new NativeFunction(TypeOf, 1)),
             ("is", new NativeFunction(Is, 2)),
             ("fields", new NativeFunction(Fields, 1)),
-            ("methods", new NativeFunction(Methods, 1))
+            ("methods", new NativeFunction(Methods, 1)),
+            ("hasField", new NativeFunction(HasField, 2)),
+            ("hasMethod", new NativeFunction(HasMethod, 2))
         ];
     }
 
@@ -135,5 +137,25 @@ public class LoxGlobalFunctions
         }
 
         return new LoxArrayInstance(arrayClass, [..instance.Class?.Methods.Select(kv => kv.Key) ?? []]);
+    }
+
+    private object HasField(IReadOnlyList<object?> args)
+    {
+        if (args is not [LoxInstance instance, string name])
+        {
+            throw new ArgumentException("Invalid argument types.", nameof(args));
+        }
+
+        return instance.Fields.ContainsKey(name);
+    }
+
+    private object? HasMethod(IReadOnlyList<object?> args)
+    {
+        if (args is not [LoxInstance instance, string name])
+        {
+            throw new ArgumentException("Invalid argument types.", nameof(args));
+        }
+
+        return instance.Class?.Methods.ContainsKey(name);
     }
 }

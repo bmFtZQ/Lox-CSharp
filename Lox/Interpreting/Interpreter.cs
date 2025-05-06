@@ -270,7 +270,7 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
         {
             return Evaluate(expr.Index) switch
             {
-                double d when instance is LoxArrayInstance array => array.Get(d),
+                double d when instance is LoxArrayInstance array => array.Get(d, expr.Token),
                 string s => instance.Get(s, expr.Token),
                 double => throw new RunTimeException(expr.Token, "Non-array instance cannot index numbers."),
                 _ => throw new RunTimeException(expr.Token, "Indexer must be a number or string.")
@@ -302,14 +302,14 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
         switch (Evaluate(expr.Index))
         {
             case double d when instance is LoxArrayInstance array:
-                array.Set(d, value);
+                array.Set(d, value, expr.Token);
                 break;
 
             case double:
                 throw new RunTimeException(expr.Token, "Non-array instance cannot index numbers.");
 
             case string s:
-                instance.Set(s, value);
+                instance.Set(s, value, expr.Token);
                 break;
 
             default:

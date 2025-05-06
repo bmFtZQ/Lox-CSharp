@@ -337,27 +337,46 @@ public class Parser(IEnumerable<Token> tokens)
     {
         var expr = Or();
 
-        if (Match(TokenType.Equal))
+        if (Match(TokenType.Equal,
+                TokenType.PlusEqual,
+                TokenType.MinusEqual,
+                TokenType.StarEqual,
+                TokenType.SlashEqual))
         {
-            // Search for 'l-value' that can be assigned to.
-            var equals = Previous();
+            var op = Previous();
 
             // Search for additional assignment expressions or navigate further
             // down the grammar.
             var value = Assignment();
 
-            if (expr is VariableExpr varExpr)
+            // Check for augmented assignment operator (i += 1 to i = i + 1)
+            var token = op.Type switch
             {
-                var name = varExpr.Name;
-                return new AssignExpr(name, value);
+                TokenType.PlusEqual => new Token(TokenType.Plus, "+", null, op.Line),
+                TokenType.MinusEqual => new Token(TokenType.Minus, "-", null, op.Line),
+                TokenType.StarEqual => new Token(TokenType.Star, "*", null, op.Line),
+                TokenType.SlashEqual => new Token(TokenType.Slash, "/", null, op.Line),
+                _ => null
+            };
+
+            if (token is not null)
+            {
+                value = new BinaryExpr(expr, token, value);
             }
 
-            if (expr is GetExpr getExpr)
+            // Search for 'l-value' that can be assigned to.
+            switch (expr)
             {
-                return new SetExpr(getExpr.Object, getExpr.Index, value, getExpr.Token);
-            }
+                case VariableExpr varExpr:
+                    return new AssignExpr(varExpr.Name, value);
 
-            Error(equals, "Invalid assignment target.");
+                case GetExpr getExpr:
+                    return new SetExpr(getExpr.Object, getExpr.Index, value, getExpr.Token);
+
+                default:
+                    Error(op, "Invalid assignment target.");
+                    break;
+            }
         }
 
         return expr;
