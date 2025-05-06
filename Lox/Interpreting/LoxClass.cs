@@ -5,11 +5,13 @@ public class LoxClass : LoxInstance, ILoxCallable
     public LoxClass(string name,
         LoxClass? superclass = null,
         Dictionary<string, ILoxMethod>? methods = null,
-        Dictionary<string, ILoxMethod>? staticMethods = null)
+        Dictionary<string, ILoxMethod>? staticMethods = null,
+        Func<LoxClass, LoxInstance>? makeInstance = null)
     {
         Name = name;
         SuperClass = superclass;
         Methods = methods ?? [];
+        _makeInstanceFunction = makeInstance ?? (c => new LoxInstance(c));
 
         if (staticMethods is not null)
         {
@@ -18,6 +20,7 @@ public class LoxClass : LoxInstance, ILoxCallable
         }
     }
 
+    private readonly Func<LoxClass, LoxInstance> _makeInstanceFunction;
     public string Name { get; }
     public LoxClass? SuperClass { get; }
     public Dictionary<string, ILoxMethod> Methods { get; }
@@ -32,7 +35,7 @@ public class LoxClass : LoxInstance, ILoxCallable
     /// <returns>A new Lox instance of the Lox class.</returns>
     public object Call(Interpreter interpreter, IReadOnlyList<object?> arguments)
     {
-        var instance = new LoxInstance(this);
+        var instance = MakeInstance();
         var ctor = FindMethod("init");
         ctor?.Bind(instance).Call(interpreter, arguments);
         return instance;
@@ -46,6 +49,11 @@ public class LoxClass : LoxInstance, ILoxCallable
     public ILoxMethod? FindMethod(string name)
     {
         return Methods.GetValueOrDefault(name) ?? SuperClass?.FindMethod(name);
+    }
+
+    public LoxInstance MakeInstance()
+    {
+        return _makeInstanceFunction(this);
     }
 
     public override string ToString() => $"{Name}";

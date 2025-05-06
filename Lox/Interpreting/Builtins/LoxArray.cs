@@ -8,67 +8,54 @@ public class LoxArray
     public LoxArray(Interpreter interpreter)
     {
         _interpreter = interpreter;
-        Class = new LoxClass("Math", staticMethods: new()
+        Class = new LoxClass("Array", methods: new()
         {
-            { "init", new NativeMethod(Init, 2) },
-            { "get", new NativeMethod(Get, 1) },
-            { "set", new NativeMethod(Set, 2) },
+            { "init", new NativeMethod(Init, 1) },
             { "length", new NativeMethod(Length) },
             { "foreach", new NativeMethod(ForEach, 1) },
             { "toString", new NativeMethod(Method_ToString) }
-        });
+        }, makeInstance: c => new LoxArrayInstance(c));
+    }
+
+    private static void ThrowIfNotInstance(LoxInstance instance, out LoxArrayInstance array)
+    {
+        array = instance as LoxArrayInstance ?? throw new RunTimeException(null, "");
     }
 
     private static object Init(LoxInstance self, IReadOnlyList<object?> args)
     {
+        ThrowIfNotInstance(self, out var arr);
         if (args is not [double length])
         {
             throw new ArgumentException("Invalid argument types.", nameof(args));
         }
 
-        self.Data = new object?[(int)length];
-        return self;
+        arr.Array = [];
+        arr.Array.AddRange(new object?[(int)length]);
+
+        return arr;
     }
 
-    private static object? Get(LoxInstance self, IReadOnlyList<object?> args)
+    private static object Length(LoxInstance self, IReadOnlyList<object?> args)
     {
-        if (args is not [double index])
-        {
-            throw new ArgumentException("Invalid argument types.", nameof(args));
-        }
-
-        return (self.Data as object?[])?[(int)index];
-    }
-
-    private static object? Set(LoxInstance self, IReadOnlyList<object?> args)
-    {
-        if (args is not [double index, var value])
-        {
-            throw new ArgumentException("Invalid argument types.", nameof(args));
-        }
-
-        return (self.Data as object?[])![(int)index] = value;
-    }
-
-    private static object? Length(LoxInstance self, IReadOnlyList<object?> args)
-    {
+        ThrowIfNotInstance(self, out var arr);
         if (args is not [])
         {
             throw new ArgumentException("Invalid argument types.", nameof(args));
         }
 
-        return (double?)(self.Data as object?[])?.Length;
+        return (double)arr.Array.Count;
     }
 
     private object? ForEach(LoxInstance self, IReadOnlyList<object?> args)
     {
+        ThrowIfNotInstance(self, out var arr);
         if (args is not [ILoxCallable function])
         {
             throw new ArgumentException("Invalid argument types.", nameof(args));
         }
 
-        var array = self.Data as object?[];
-        foreach (var (obj, i) in array?.Select((x, i) => (x, i)) ?? [])
+        foreach (var (obj, i) in arr.Array.Select((x, i) => (x, i)))
         {
             function.Call(_interpreter, [obj, (double)i]);
         }
@@ -78,13 +65,13 @@ public class LoxArray
 
     private object Method_ToString(LoxInstance self, IReadOnlyList<object?> args)
     {
+        ThrowIfNotInstance(self, out var arr);
         if (args is not [])
         {
             throw new ArgumentException("Invalid argument types.", nameof(args));
         }
 
-        var array = self.Data as object?[];
-        var str = array!.Select(_interpreter.Stringify);
+        var str = arr.Array.Select(_interpreter.Stringify);
         return $"[{string.Join(", ", str)}]";
     }
 }

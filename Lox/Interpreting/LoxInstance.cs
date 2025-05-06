@@ -16,12 +16,12 @@ public class LoxInstance(LoxClass? cls = null)
     /// Get a property value from this instance.
     /// </summary>
     /// <param name="name">The name of the property to get.</param>
+    /// <param name="token">The token that identifies this get if an error
+    /// occurs.</param>
     /// <returns>The value of the property specified.</returns>
     /// <exception cref="RunTimeException">
     /// Thrown if the specified property does not exist.
     /// </exception>
-    public object? Get(Token name) => Get(name.Lexeme, name);
-
     public object? Get(string name, Token? token = null)
     {
         if (Fields.TryGetValue(name, out var value))
@@ -37,12 +37,9 @@ public class LoxInstance(LoxClass? cls = null)
     /// </summary>
     /// <param name="name">The name of the property to set.</param>
     /// <param name="value">The value to set the property to.</param>
-    public void Set(Token name, object? value)
-    {
-        Fields[name.Lexeme] = value;
-    }
-
-    public void Set(string name, object? value)
+    /// <param name="token">Token that identifies this set if error
+    /// occurs.</param>
+    public void Set(string name, object? value, Token? token = null)
     {
         Fields[name] = value;
     }

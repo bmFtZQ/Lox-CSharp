@@ -268,10 +268,16 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 
         if (obj is LoxInstance instance)
         {
-            return instance.Get(expr.Name);
+            return Evaluate(expr.Name) switch
+            {
+                double d when instance is LoxArrayInstance array => array.Get(d),
+                string s => instance.Get(s, expr.Token),
+                double => throw new RunTimeException(expr.Token, "Non-array instance cannot index numbers."),
+                _ => throw new RunTimeException(expr.Token, "Indexer must be a number or string.")
+            };
         }
 
-        throw new RunTimeException(expr.Name, "Only instances have properties.");
+        throw new RunTimeException(expr.Token, "Only instances have properties.");
     }
 
     /// <summary>
@@ -288,11 +294,28 @@ public class Interpreter : IExprVisitor<object?>, IStmtVisitor
 
         if (obj is not LoxInstance instance)
         {
-            throw new RunTimeException(expr.Name, "Only instances have fields.");
+            throw new RunTimeException(expr.Token, "Only instances have fields.");
         }
 
         var value = Evaluate(expr.Value);
-        instance.Set(expr.Name, value);
+
+        switch (Evaluate(expr.Name))
+        {
+            case double d when instance is LoxArrayInstance array:
+                array.Set(d, value);
+                break;
+
+            case double:
+                throw new RunTimeException(expr.Token, "Non-array instance cannot index numbers.");
+
+            case string s:
+                instance.Set(s, value);
+                break;
+
+            default:
+                throw new RunTimeException(expr.Token, "Indexer must be a number or string.");
+        }
+
         return value;
     }
 

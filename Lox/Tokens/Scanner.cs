@@ -65,6 +65,8 @@ public class Scanner(string source)
             case ')': AddToken(TokenType.RightParenthesis); break;
             case '{': AddToken(TokenType.LeftBrace); break;
             case '}': AddToken(TokenType.RightBrace); break;
+            case '[': AddToken(TokenType.LeftBracket); break;
+            case ']': AddToken(TokenType.RightBracket); break;
             case ',': AddToken(TokenType.Comma); break;
             case '.': AddToken(TokenType.Dot); break;
             case '-': AddToken(TokenType.Minus); break;

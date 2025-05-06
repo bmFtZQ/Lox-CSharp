@@ -354,7 +354,7 @@ public class Parser(IEnumerable<Token> tokens)
 
             if (expr is GetExpr getExpr)
             {
-                return new SetExpr(getExpr.Object, getExpr.Name, value);
+                return new SetExpr(getExpr.Object, getExpr.Name, value, getExpr.Token);
             }
 
             Error(equals, "Invalid assignment target.");
@@ -532,7 +532,14 @@ public class Parser(IEnumerable<Token> tokens)
             else if (Match(TokenType.Dot))
             {
                 var name = Consume(TokenType.Identifier, "Expect property name after '.'.");
-                expr = new GetExpr(expr, name);
+                expr = new GetExpr(expr, new LiteralExpr(name.Lexeme), name);
+            }
+            else if (Match(TokenType.LeftBracket))
+            {
+                var token = Peek();
+                var propExpr = Expression();
+                Consume(TokenType.RightBracket, "Expect ']' after property expression.");
+                expr = new GetExpr(expr, propExpr, token);
             }
             else
             {

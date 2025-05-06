@@ -1,0 +1,13 @@
+class A {}
+
+var a = Array(10);
+
+for (var i = 0; i < a.length(); i = i + 1) {
+    a[i] = 10 - i;
+}
+
+for (var i = 0; i < a.length(); i = i + 1) {
+    print a[i];
+}
+
+print a;

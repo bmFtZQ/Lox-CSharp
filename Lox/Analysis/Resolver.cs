@@ -330,6 +330,7 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
     public object? VisitGetExpr(GetExpr expr)
     {
         Resolve(expr.Object);
+        Resolve(expr.Name);
         return null;
     }
 
@@ -337,6 +338,7 @@ public class Resolver(Interpreter interpreter) : IStmtVisitor, IExprVisitor<obje
     {
         Resolve(expr.Value);
         Resolve(expr.Object);
+        Resolve(expr.Name);
         return null;
     }
 

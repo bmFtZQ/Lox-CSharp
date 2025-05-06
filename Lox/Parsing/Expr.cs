@@ -64,12 +64,12 @@ public record CallExpr(Expr Callee, Token Parenthesis, IReadOnlyList<Expr> Argum
     public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitCallExpr(this);
 }
 
-public record GetExpr(Expr Object, Token Name) : Expr
+public record GetExpr(Expr Object, Expr Name, Token Token) : Expr
 {
     public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitGetExpr(this);
 }
 
-public record SetExpr(Expr Object, Token Name, Expr Value) : Expr
+public record SetExpr(Expr Object, Expr Name, Expr Value, Token Token) : Expr
 {
     public override T Accept<T>(IExprVisitor<T> visitor) => visitor.VisitSetExpr(this);
 }
