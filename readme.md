@@ -72,6 +72,7 @@ for (var i = 0; i < arr.length(); i += 1) {
   * `get(i)` - Get a single value from array at index `i`.
   * `set(i, v)` - Set a single value `v` at index `i`.
   * `length()` - Get the length of the array.
+  * `fill(v)` - Fill array in place with value `v`, returns the array.
   * `foreach(function)` - Supply a function that will be run against every
     element, with arguments `item` and `index`.
 * String
@@ -99,8 +100,11 @@ for (var i = 0; i < arr.length(); i += 1) {
   * `"function"`
 * `is(v, t)` - Test that value `v` is of type `t`, `t` can be a type code or a
   class, if `t` is a class, will only return true if `v` is an instance.
-* `fields(i)` - Get all fields of an instance, returned as an Array
-  containing Arrays that hold the key-value pairs.
+* `fields(i)` - Get all fields of an instance, returned as an array containing
+  the names of each field as a string.
+* `methods(i)` - Get all methods of an instance as an array of method names.
+* `hasField(i, f)` - Test that an instance `i` has field `f`.
+* `hasMethod(i, m)` - Test that an instance `i` has field `f`.
 
 [1]: https://craftinginterpreters.com
 [2]: https://craftinginterpreters.com/the-lox-language.html
